@@ -57,7 +57,7 @@ const modules: Module[] = [
   {
     id: 0, category: "Старт", eyebrow: "Модуль 0", title: "Вход в студию",
     description: "Настраиваем сервисы, папки и первый рабочий проект без технической путаницы.",
-    result: "Инструменты готовы к работе", icon: "↗", tone: "sky", duration: "8 уроков",
+    result: "Инструменты готовы к работе", icon: "↗", tone: "sky", duration: "6 уроков",
     packages: ["flagship", "content", "marketing"], lessons: toLessons(module0Content),
   },
   {
