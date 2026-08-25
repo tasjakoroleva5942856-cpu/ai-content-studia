@@ -19,6 +19,7 @@ type Module = {
 };
 
 const subscriptionLessonId = "3c3b3828167181a6a64bf70b02c9dd27";
+const installLessonId = "3c6b382816718159b68ccd9fbfbad560";
 const lessonVideos: Record<string, string> = {};
 
 const lessonOverrides: Record<string, { title?: string; note?: string }> = {
@@ -57,7 +58,7 @@ const modules: Module[] = [
   {
     id: 0, category: "Старт", eyebrow: "Модуль 0", title: "Вход в студию",
     description: "Настраиваем сервисы, папки и первый рабочий проект без технической путаницы.",
-    result: "Инструменты готовы к работе", icon: "↗", tone: "sky", duration: "6 уроков",
+    result: "Инструменты готовы к работе", icon: "↗", tone: "sky", duration: "5 уроков",
     packages: ["flagship", "content", "marketing"], lessons: toLessons(module0Content),
   },
   {
@@ -374,13 +375,13 @@ export default function Home() {
             {activeLesson ? (
               <div className="lesson-view">
                 <div className="lesson-screen-head"><button className="back-link" onClick={() => activeResource ? setActiveResource(null) : setActiveLesson(null)}>{activeResource ? "‹ К уроку" : "‹ Все уроки"}</button><button className="lesson-close" onClick={closeModule} aria-label="Закрыть">×</button></div>
-                {!activeResource && activeLesson.id !== subscriptionLessonId && (lessonVideos[activeLesson.id]
+                {!activeResource && activeLesson.id !== subscriptionLessonId && activeLesson.id !== installLessonId && (lessonVideos[activeLesson.id]
                   ? <div className="lesson-video"><iframe src={lessonVideos[activeLesson.id]} title={`Видео: ${activeLesson.title}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
                   : <div className="video-placeholder"><div className="play-button">▶</div><span>Здесь будет видео урока</span><small>Видео появится здесь после добавления ссылки YouTube</small></div>)}
                 {(activeResource || activeLesson.id !== subscriptionLessonId) && <p className="lesson-label">{activeResource ? "МАТЕРИАЛ" : "УРОК"}</p>}<h3>{(activeResource || activeLesson).title}</h3><p className="lesson-note">{(activeResource || activeLesson).note}</p>
                 {!activeResource && activeLesson.id === subscriptionLessonId
                   ? <SubscriptionLesson />
-                  : (activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} showDocument={!activeResource} />}
+                  : (activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} />}
                 {activeResource ? <footer className="lesson-footer resource-footer">
                   <button className="complete-button" onClick={() => setActiveResource(null)}>Вернуться к уроку</button>
                 </footer> : <footer className="lesson-footer">

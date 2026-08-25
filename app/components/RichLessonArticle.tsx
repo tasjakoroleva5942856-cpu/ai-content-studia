@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { copyText } from "../lib/fileActions";
 
 type CourseLessonLink = { id: string; title: string; sourceUrl?: string };
-type Props = { lessonId: string; title: string; content: string; courseLessons: CourseLessonLink[]; onOpenLesson: (id: string) => void; showDocument?: boolean; showTools?: boolean };
+type Props = { lessonId: string; title: string; content: string; courseLessons: CourseLessonLink[]; onOpenLesson: (id: string) => void; showTools?: boolean };
 type NavigationContextValue = { resolve: (url: string) => CourseLessonLink | undefined; open: (id: string) => void };
 
 const LessonNavigationContext = createContext<NavigationContextValue>({ resolve: () => undefined, open: () => undefined });
@@ -301,19 +301,17 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
   return <p className={callout ? "rich-callout" : "rich-paragraph"} key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
 }
 
-export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showDocument = true, showTools = true }: Props) {
-  const [documentOpen, setDocumentOpen] = useState(false);
+export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true }: Props) {
   const prepared = useMemo(() => contentWithoutNavigation(content), [content]);
   const navigation = useMemo<NavigationContextValue>(() => {
     const lessonMap = new Map(courseLessons.map((lesson) => [notionPageId(lesson.sourceUrl || ""), lesson]));
-    return { resolve: (url: string) => lessonMap.get(notionPageId(url)), open: (id: string) => { setDocumentOpen(false); onOpenLesson(id); } };
+    return { resolve: (url: string) => lessonMap.get(notionPageId(url)), open: (id: string) => { onOpenLesson(id); } };
   }, [courseLessons, onOpenLesson]);
   const tokens = useMemo(() => tokenize(prepared), [prepared]);
   const firstHeading = tokens.findIndex((token) => token.startsWith("## "));
   const intro = firstHeading === -1 ? tokens : tokens.slice(0, firstHeading);
   const rest = firstHeading === -1 ? [] : tokens.slice(firstHeading);
   const tools = useMemo(() => appCatalog.filter((app) => app.pattern.test(prepared)).filter((app, index, all) => !(app.name === "Claude" && all.some((item) => item.name === "Claude Code"))), [prepared]);
-  const documentFilename = `${clean(title).replace(/[^a-zа-яё0-9]+/gi, "-").replace(/^-|-$/g, "")}.docx`;
 
   const sections: Array<{ title: string; blocks: string[] }> = [];
   for (const token of rest) {
@@ -324,13 +322,6 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
   const outcomeIndex = intro.findIndex((item) => /^\*\*Результат/i.test(item));
   const outcome = outcomeIndex >= 0 ? intro[outcomeIndex].replace(/^\*\*Результат(?: урока)?[:*\s]*/i, "").trim() : "";
   const introBody = intro.filter((_, index) => index !== outcomeIndex);
-
-  useEffect(() => {
-    if (!documentOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setDocumentOpen(false); };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [documentOpen]);
 
   const renderSection = (section: { title: string; blocks: string[] }, sectionIndex: number, prefix = "lesson") => {
     const step = section.title.match(/^Шаг\s*(\d+)/i)?.[1];
@@ -347,33 +338,12 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
 
       {showTools && tools.length > 0 && <section className="lesson-tools"><div className="rich-section-heading"><div><p>ИНСТРУМЕНТЫ УРОКА</p><h4>Что будем использовать</h4></div><span>{tools.length}</span></div><div className="lesson-tools-grid">{tools.map((app) => <a href={app.url} target="_blank" rel="noreferrer" key={app.name}><AppIcon app={app} /><span><strong>{app.name}</strong><small>{app.label}</small></span><b>↗</b></a>)}</div></section>}
 
-      {showDocument && !lessonId.startsWith("reality-") && <div className="full-instruction-card">
-        <div className="full-instruction-icon">DOCX</div>
-        <div><strong>Полная инструкция к уроку</strong><small>Откройте внутри студии или сохраните на устройство</small></div>
-        <div className="full-instruction-actions"><button type="button" onClick={() => setDocumentOpen(true)}>Открыть в студии</button><a href={`/documents/${lessonId}.docx`} download={documentFilename}>Скачать DOCX</a></div>
-      </div>}
-
       {introBody.length > 0 && <section className="instruction-section intro-section"><div className="instruction-section-body">{renderBlocks(introBody, "Введение")}</div></section>}
 
       <div className="instruction-sections">
         {sections.map((section, sectionIndex) => renderSection(section, sectionIndex))}
       </div>
 
-      {documentOpen && <div className="document-reader-backdrop" role="presentation" onMouseDown={() => setDocumentOpen(false)}>
-        <section className="document-reader" role="dialog" aria-modal="true" aria-label={`Документ: ${title}`} onMouseDown={(event) => event.stopPropagation()}>
-          <header className="document-reader-head">
-            <div className="document-reader-mark">DOCX</div>
-            <div><small>ДОКУМЕНТ УРОКА</small><h3>{title}</h3><p>Все шаги и материалы доступны прямо внутри студии</p></div>
-            <button type="button" onClick={() => setDocumentOpen(false)} aria-label="Закрыть документ">×</button>
-          </header>
-          <div className="document-reader-content">
-            {outcome && <div className="outcome-card"><span>✓</span><div><small>РЕЗУЛЬТАТ УРОКА</small><strong><InlineRich value={outcome} /></strong></div></div>}
-            {introBody.length > 0 && <section className="instruction-section intro-section"><div className="instruction-section-body">{renderBlocks(introBody, "Введение")}</div></section>}
-            <div className="instruction-sections">{sections.map((section, sectionIndex) => renderSection(section, sectionIndex, "reader"))}</div>
-          </div>
-          <footer className="document-reader-actions"><button type="button" onClick={() => setDocumentOpen(false)}>Вернуться к уроку</button><a href={`/documents/${lessonId}.docx`} download={documentFilename}>Скачать DOCX</a></footer>
-        </section>
-      </div>}
     </article></LessonNavigationContext.Provider>
   );
 }
