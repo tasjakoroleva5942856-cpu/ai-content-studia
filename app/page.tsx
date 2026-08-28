@@ -92,8 +92,8 @@ const modules: Module[] = [
     packages: ["flagship", "content"], lessons: toLessons(module5Content),
   },
   {
-    id: 6, category: "Реалити", eyebrow: "Модуль 6", title: "Собираем студию вместе",
-    description: "Реальные решения, тесты, ошибки и улучшения на каждом этапе внедрения.",
+    id: 6, category: "Реалити", eyebrow: "Модуль 6", title: "Реалити: как устроено у меня",
+    description: "Показываю, как всё устроено в моём блоге — как ориентир, а не пошаговая инструкция.",
     result: "Система проверена на практике", icon: "●", tone: "pink", duration: "6 этапов",
     packages: ["flagship", "marketing"],
     lessons: [
