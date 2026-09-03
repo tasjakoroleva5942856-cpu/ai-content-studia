@@ -247,10 +247,23 @@ export default function Home() {
 
     // Доступ к модулям 1-5 проверяем на сервере по подписи initData — см.
     // app/api/access и app/lib/access.ts. Без initData (например, открыли
-    // страницу не из Telegram) доступ считается закрытым.
+    // страницу не из Telegram) доступ считается закрытым — кроме прохода
+    // автора через ?key= (см. ниже).
     const initData = telegram?.initData;
-    if (!initData) return;
-    fetch("/api/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData }) })
+
+    // Проход для автора: разовая ссылка вида ?key=СЕКРЕТ один раз сохраняет
+    // ключ в этом браузере, дальше подписка не нужна. Сверяется на сервере
+    // с OWNER_ACCESS_KEY (см. app/api/access/route.ts и .env.example).
+    const OWNER_KEY_STORAGE = "acs_owner_key";
+    const urlKey = new URLSearchParams(window.location.search).get("key");
+    if (urlKey) {
+      window.localStorage.setItem(OWNER_KEY_STORAGE, urlKey);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    const ownerKey = urlKey || window.localStorage.getItem(OWNER_KEY_STORAGE) || undefined;
+
+    if (!initData && !ownerKey) return;
+    fetch("/api/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData, ownerKey }) })
       .then((response) => (response.ok ? response.json() : { active: false }))
       .then((data) => setHasAccess(Boolean(data.active)))
       .catch(() => setHasAccess(false));
