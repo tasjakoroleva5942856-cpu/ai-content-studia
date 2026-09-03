@@ -299,11 +299,52 @@ function RouteSwitcher({ routeA, routeB }: { routeA: RouteInfo; routeB: RouteInf
   </div>;
 }
 
+// Sequential "chat" steps ported as `### N. Чат «Title»` headings (currently only
+// module-1.ts's "Агент-маркетолог" lesson, 7 chats). This is the same shape as the
+// `.chat-acc` accordion in the design mockup (lessonredesignmockup.html, screen m1-1):
+// a collapsed-by-default <details>/<summary> per chat, first one open. When a run of
+// 2+ consecutive blocks match this heading pattern, group them into ChatAccordion
+// instead of rendering each as a plain subsection heading.
+const CHAT_HEAD = /^###\s*(\d+)\.\s*Чат\s*«([^»]+)»\s*$/;
+
+type ChatAccItem = { number: string; title: string; file?: string; blocks: string[] };
+
+function ChatAccordion({ items, sectionTitle }: { items: ChatAccItem[]; sectionTitle: string }) {
+  return <div className="chat-accordion">{items.map((item, itemIndex) => (
+    <details className="chat-acc-item" open={itemIndex === 0} key={item.number}>
+      <summary>
+        <span className="chat-acc-left"><span className="chat-acc-num">{item.number}</span><b>{item.title}</b></span>
+        <span className="chat-acc-right">{item.file && <span className="chat-acc-file">{item.file}</span>}<span className="chat-acc-chev">▶</span></span>
+      </summary>
+      <div className="chat-acc-body">{renderBlocks(item.blocks, sectionTitle)}</div>
+    </details>
+  ))}</div>;
+}
+
 function renderBlocks(blocks: string[], sectionTitle: string) {
   const result: ReactNode[] = [];
   let index = 0;
 
   while (index < blocks.length) {
+    if (CHAT_HEAD.test(blocks[index])) {
+      const items: ChatAccItem[] = [];
+      let cursor = index;
+      while (cursor < blocks.length && CHAT_HEAD.test(blocks[cursor])) {
+        const match = blocks[cursor].match(CHAT_HEAD)!;
+        let bodyEnd = cursor + 1;
+        while (bodyEnd < blocks.length && !CHAT_HEAD.test(blocks[bodyEnd]) && !/^#{1,5}\s/.test(blocks[bodyEnd])) bodyEnd += 1;
+        const itemBlocks = blocks.slice(cursor + 1, bodyEnd);
+        const file = itemBlocks.map((block) => block.match(/Результат\s*→\s*`([^`]+)`/)?.[1]).find(Boolean);
+        items.push({ number: match[1], title: match[2], file, blocks: itemBlocks });
+        cursor = bodyEnd;
+      }
+      if (items.length > 1) {
+        result.push(<ChatAccordion items={items} sectionTitle={sectionTitle} key={`chat-acc-${index}`} />);
+        index = cursor;
+        continue;
+      }
+    }
+
     const table = tableSpecs.find((spec) => spec.headers.every((header, offset) => blocks[index + offset] && sameCell(blocks[index + offset], header)));
     if (table) {
       const rows: string[][] = [];

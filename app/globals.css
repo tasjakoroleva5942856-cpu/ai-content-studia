@@ -359,6 +359,22 @@ button { font:inherit; }
 .lesson-info-card-label { display:flex; align-items:center; gap:8px; }
 .lesson-info-card-label .dot-ic { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:11px; background:#7658e8; color:#fff; flex:0 0 auto; }
 .lesson-info-card small { padding-top:2px; color:#8b8590; font-size:9px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }.lesson-info-card p { margin:0; color:#4e4953; font-size:13px; font-weight:650; line-height:1.48; }
+.chat-accordion { display:grid; gap:10px; margin:14px 0 20px; }
+.chat-acc-item { overflow:hidden; border:1px solid #eae7ee; border-radius:17px; background:#fff; }
+.chat-acc-item summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; cursor:pointer; list-style:none; }
+.chat-acc-item summary::-webkit-details-marker { display:none; }
+.chat-acc-item summary::marker { content:""; }
+.chat-acc-item[open] summary { border-bottom:1px solid #eae7ee; }
+.chat-acc-left { display:flex; align-items:center; gap:10px; min-width:0; }
+.chat-acc-left b { font-size:13.5px; font-weight:800; color:#28242c; overflow-wrap:anywhere; }
+.chat-acc-num { flex:0 0 auto; width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:900; }
+.chat-acc-right { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+.chat-acc-file { padding:3px 9px; border-radius:20px; background:#f5f3f7; color:#8b8590; font-size:9px; font-weight:800; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+.chat-acc-chev { color:#8b8590; font-size:10px; transition:transform .2s ease; }
+.chat-acc-item[open] .chat-acc-chev { transform:rotate(90deg); }
+.chat-acc-body { padding:6px 16px 16px; }
+.chat-acc-body .rich-paragraph:first-child,.chat-acc-body .rich-callout:first-child { margin-top:0; }
+.chat-acc-body .prompt-document:first-child { margin-top:0; }
 .route-switch-cards { display:flex; gap:8px; margin:0 0 14px; }
 .route-switch-card { flex:1; padding:12px 13px; border:1.5px solid #eae7ee; border-radius:14px; background:#fff; font:inherit; text-align:left; cursor:pointer; transition:border-color .15s,background .15s; }
 .route-switch-card:hover { border-color:#d7cffb; }
