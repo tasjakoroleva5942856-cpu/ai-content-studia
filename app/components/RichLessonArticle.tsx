@@ -187,15 +187,21 @@ function ReelsMethodCards({ blocks }: { blocks: string[] }) {
   </div>;
 }
 
-function PromptDocument({ code, title }: { code: string; title: string }) {
+// Mockup's `.prompt-card` (screen m1-1 etc): a `ph` header (bold title + small
+// pill badge), a short result/hint line, then a collapsed <details> holding the
+// full text and a copy button. The mockup's own prompt-cards carry per-card
+// result copy and numbering ("01"/"02") that only exists for a few hand-authored
+// screens — module-N.ts's fenced code blocks don't carry that metadata, so this
+// falls back to a generic "AI" badge and a copy hint instead of a numbered result line.
+function PromptCard({ code, title }: { code: string; title: string }) {
   const [expanded, setExpanded] = useState(false);
   const [copyState, setCopyState] = useState("Скопировать промпт");
   const prepared = code.replace(/^```[^\n]*\n?/, "").replace(/```$/, "").trim();
   const isInstallerMessage = /Установите студию одним файлом/i.test(title);
-  const documentTitle = isInstallerMessage
+  const cardTitle = isInstallerMessage
     ? "Сообщение для запуска установки"
     : title.toLowerCase().includes("методика") ? "Готовая методика агента" : "Готовый текст для вставки";
-  const documentHint = isInstallerMessage
+  const cardHint = isInstallerMessage
     ? "Скопируйте после того, как прикрепите файл установки"
     : "Откройте полностью и скопируйте одним нажатием";
 
@@ -205,20 +211,13 @@ function PromptDocument({ code, title }: { code: string; title: string }) {
   };
 
   return (
-    <div className={`prompt-document ${expanded ? "expanded" : ""}`}>
-      <div className="prompt-document-head">
-        <strong>{documentTitle}</strong>
-        <span className="prompt-document-badge">AI</span>
-      </div>
-      <p className="prompt-document-hint">{documentHint}</p>
-      <details
-        className="prompt-document-details"
-        open={expanded}
-        onToggle={(event) => setExpanded(event.currentTarget.open)}
-      >
+    <div className="prompt-card">
+      <div className="ph"><b>{cardTitle}</b><span>AI</span></div>
+      <p className="hint">{cardHint}</p>
+      <details open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
         <summary>{expanded ? "Свернуть ←" : "Открыть полностью →"}</summary>
         <pre>{prepared}</pre>
-        <p className="prompt-copy-help">После копирования текст временно хранится в буфере обмена. Откройте {isInstallerMessage ? "Claude Code или Codex" : "сервис, указанный в шаге"}, нажмите в поле сообщения и выберите «Вставить».</p>
+        <p className="copy-note">После копирования текст временно хранится в буфере обмена. Откройте {isInstallerMessage ? "Claude Code или Codex" : "сервис, указанный в шаге"}, нажмите в поле сообщения и выберите «Вставить».</p>
         <button type="button" className={copyState.startsWith("Скопировано") ? "copied" : ""} onClick={handleCopy}>{copyState}</button>
       </details>
     </div>
@@ -286,11 +285,21 @@ function PromptAngles({ rows }: { rows: string[][] }) {
   </div>)}</div>;
 }
 
+// The mockup never renders a literal `<table>` anywhere in a lesson body (verified:
+// zero `<table` tags in lessonredesignmockup.html) — every tabular list in module-N.ts
+// content maps to `.info-rows` (name/value pairs) in the mockup's actual screens, so
+// the generic fallback below (used by Module 3/4/5's remaining tables that don't have
+// a bespoke renderer yet) uses that same markup instead of a custom grid-table.
 function RichTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   if (headers[0] === "Ракурс") return <PromptAngles rows={rows} />;
   if (headers[0] === "Вариант") return <StartVariantRows rows={rows} />;
   if (headers[0] === "Сервис") return <ServicePriceRows rows={rows} />;
-  return <div className="rich-table"><div className="rich-table-head">{headers.map((header) => <span key={header}>{header}</span>)}</div><div className="rich-table-body">{rows.map((row, rowIndex) => <div className="rich-table-row" key={rowIndex}>{row.map((cell, cellIndex) => <div key={cellIndex}><small>{headers[cellIndex]}</small><span><InlineRich value={cell} /></span></div>)}</div>)}</div></div>;
+  return <div className="info-rows">{rows.map((row, rowIndex) => (
+    <div className="row" key={rowIndex}>
+      <div className="head"><span className="name"><span className="dot-ic">{rowIndex + 1}</span><b><InlineRich value={row[0]} /></b></span></div>
+      <div className="sub">{row.slice(1).map((cell, cellIndex) => <span key={cellIndex}>{cellIndex > 0 && " · "}<InlineRich value={cell} /></span>)}</div>
+    </div>
+  ))}</div>;
 }
 
 // Module 0, Lesson 1's "Три варианта старта" and "Сервис/цена" tables render as
@@ -347,17 +356,17 @@ function RouteSwitcher({ routeA, routeB }: { routeA: RouteInfo; routeB: RouteInf
   const current = routes.find((route) => route.key === active) ?? routeA;
 
   return <div className="route-switch">
-    <div className="route-switch-cards">{routes.map((route) => (
+    <div className="route-tabs">{routes.map((route) => (
       <button
         type="button"
-        className={`route-switch-card ${route.key === active ? "active" : ""}`}
+        className={route.key === active ? "active" : ""}
         key={route.key}
         onClick={() => setActive(route.key)}
       >
         <b>{route.label}</b><small>Маршрут {route.key}</small>
       </button>
     ))}</div>
-    <div className="route-switch-content">{current.nodes}</div>
+    <div className="route-panel active">{current.nodes}</div>
   </div>;
 }
 
@@ -372,15 +381,15 @@ const CHAT_HEAD = /^###\s*(\d+)\.\s*Чат\s*«([^»]+)»\s*$/;
 type ChatAccItem = { number: string; title: string; file?: string; blocks: string[] };
 
 function ChatAccordion({ items, sectionTitle }: { items: ChatAccItem[]; sectionTitle: string }) {
-  return <div className="chat-accordion">{items.map((item, itemIndex) => (
-    <details className="chat-acc-item" open={itemIndex === 0} key={item.number}>
+  return <>{items.map((item, itemIndex) => (
+    <details className="chat-acc" open={itemIndex === 0} key={item.number}>
       <summary>
-        <span className="chat-acc-left"><span className="chat-acc-num">{item.number}</span><b>{item.title}</b></span>
-        <span className="chat-acc-right">{item.file && <span className="chat-acc-file">{item.file}</span>}<span className="chat-acc-chev">▶</span></span>
+        <span className="left"><span className="dot-ic">{item.number}</span><b>{item.title}</b></span>
+        <span className="right">{item.file && <span className="file">{item.file}</span>}<span className="chev">▶</span></span>
       </summary>
-      <div className="chat-acc-body">{renderBlocks(item.blocks, sectionTitle)}</div>
+      <div className="acc-body">{renderBlocks(item.blocks, sectionTitle)}</div>
     </details>
-  ))}</div>;
+  ))}</>;
 }
 
 function renderBlocks(blocks: string[], sectionTitle: string) {
@@ -441,11 +450,27 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
       continue;
     }
 
+    // "**Время**" / "**Подготовить**" / "**Действие**" / "**Результат**" style
+    // label+content pairs render as one `.info-rows` group in the mockup (screen
+    // m1-1: Время/Подготовить/Действие/Результат all inside a single .info-rows),
+    // not as separate cards — so a run of consecutive label blocks is grouped.
     const label = blocks[index].match(/^\*\*([^*]{1,48})\*\*$/)?.[1];
     if (label && blocks[index + 1] && !/^#{2,5}\s/.test(blocks[index + 1]) && !blocks[index + 1].startsWith("```")) {
-      const icon = INFO_CARD_ICONS[label];
-      result.push(<div className="lesson-info-card" key={`info-${index}`}><div className="lesson-info-card-label">{icon && <span className="dot-ic">{icon}</span>}<small>{label}</small></div><p><InlineRich value={blocks[index + 1]} /></p></div>);
-      index += 2;
+      const rows: Array<{ label: string; content: string }> = [];
+      let cursor = index;
+      while (cursor < blocks.length) {
+        const rowLabel = blocks[cursor].match(/^\*\*([^*]{1,48})\*\*$/)?.[1];
+        if (!rowLabel || !blocks[cursor + 1] || /^#{2,5}\s/.test(blocks[cursor + 1]) || blocks[cursor + 1].startsWith("```")) break;
+        rows.push({ label: rowLabel, content: blocks[cursor + 1] });
+        cursor += 2;
+      }
+      result.push(<div className="info-rows" key={`info-${index}`}>{rows.map((row) => (
+        <div className="row" key={row.label}>
+          <div className="head"><span className="name">{INFO_CARD_ICONS[row.label] && <span className="dot-ic">{INFO_CARD_ICONS[row.label]}</span>}<b>{row.label}</b></span></div>
+          <div className="sub"><InlineRich value={row.content} /></div>
+        </div>
+      ))}</div>);
+      index = cursor;
       continue;
     }
 
@@ -457,7 +482,7 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
 }
 
 // Callout detection: a bold-lead paragraph starting with one of these words (or
-// an explicit ⚠️) is rendered as a `.rich-callout` instead of a plain paragraph.
+// an explicit ⚠️) is rendered as a mockup `.callout` instead of a plain paragraph.
 // "Готово"/"Можно" mark a successful-completion callout (mockup's `.callout.green`,
 // e.g. "**Готово, если** ...", "**Можно двигаться дальше, если:**") — those get
 // routed to the green tone specifically, below.
@@ -474,11 +499,39 @@ function isCallout(value: string) {
   return CALLOUT_LEAD_WORDS.test(value) || value.includes("⚠️");
 }
 
+// Mockup's `.callout` (screens p1/p1a/m1-1 etc): a flex row with an `.ic` icon
+// badge and a text div — `.callout.amber`/`.callout.green` carry their own
+// background via CSS, the plain "tip" tone (no ⚠️/✓ semantics) is styled inline
+// in the mockup's own markup (`style="background:var(--accent-soft);color:#164a66;"`),
+// which this mirrors with the module's --la-accent-soft token.
+const CALLOUT_ICONS: Record<"amber" | "green" | "", string> = { amber: "⚠", green: "✓", "": "💡" };
+
+function Callout({ tone, lines, id }: { tone: "amber" | "green" | ""; lines: string[]; id: string }) {
+  return (
+    <div className={`callout${tone ? ` ${tone}` : ""}`} style={tone ? undefined : { background: "var(--la-accent-soft)", color: "#164a66" }} key={id}>
+      <span className="ic">{CALLOUT_ICONS[tone]}</span>
+      <div>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</div>
+    </div>
+  );
+}
+
+// Mockup's `ol.steps` (screens p1/m1-1 etc): a numbered circle badge (`.n`) next
+// to the step text (`.body`), replacing the app's earlier CSS-counter approach.
+function Steps({ lines, id }: { lines: string[]; id: string }) {
+  return (
+    <ol className="steps" key={id}>
+      {lines.map((line, lineIndex) => (
+        <li key={line}><span className="n">{lineIndex + 1}</span><div className="body"><InlineRich value={line.replace(/^\d+[.)]\s/, "")} /></div></li>
+      ))}
+    </ol>
+  );
+}
+
 const ROUTE_HEAD = /^###\s*Маршрут\s*([А-Яа-яA-Za-z])\.\s*(.+)$/;
 const INFO_CARD_ICONS: Record<string, string> = { "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯", "Сохранить на компьютер": "💻", "Загрузить в базу знаний": "📥" };
 
 function renderBlock(value: string, index: number, sectionTitle: string): ReactNode {
-  if (value.startsWith("```")) return <PromptDocument code={value} title={sectionTitle} key={index} />;
+  if (value.startsWith("```")) return <PromptCard code={value} title={sectionTitle} key={index} />;
   if (value.startsWith("### ")) return <h5 className="subsection-title" key={index}>{clean(value)}</h5>;
   if (value.startsWith("#### ") || value.startsWith("##### ")) return <h6 key={index}>{clean(value)}</h6>;
 
@@ -487,7 +540,7 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
   if (checklist) return <div className="rich-checklist" key={index}>{lines.map((line) => <label key={line}><input type="checkbox" /><span><InlineRich value={line.replace(/^- \[[ x]\]\s?/, "")} /></span></label>)}</div>;
 
   const numbered = lines.every((line) => /^\d+[.)]\s/.test(line));
-  if (numbered) return <ol className="real-step-list" key={index}>{lines.map((line) => <li key={line}><span><InlineRich value={line.replace(/^\d+[.)]\s/, "")} /></span></li>)}</ol>;
+  if (numbered) return <Steps lines={lines} id={`steps-${index}`} key={index} />;
 
   // A bold-lead (or plain) intro line glued by a single "\n" to a numbered mini-list
   // that follows it in the same block (no blank line between them in the source).
@@ -504,8 +557,8 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
     const introIsCallout = isCallout(introValue);
     const introTone = calloutTone(introValue);
     return <div className="lesson-step-group" key={index}>
-      <p className={introIsCallout ? `rich-callout${introTone ? ` ${introTone}` : ""}` : "rich-paragraph"}>{introLines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < introLines.length - 1 && <br />}</span>)}</p>
-      <ol className="real-step-list">{stepLines.map((line) => <li key={line}><span><InlineRich value={line.replace(/^\d+[.)]\s/, "")} /></span></li>)}</ol>
+      {introIsCallout ? <Callout tone={introTone} lines={introLines} id={`intro-callout-${index}`} /> : <p className="rich-paragraph">{introLines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < introLines.length - 1 && <br />}</span>)}</p>}
+      <Steps lines={stepLines} id={`steps-${index}`} />
     </div>;
   }
 
@@ -519,8 +572,8 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
   if (bullets) return <ul className="rich-bullet-list" key={index}>{lines.map((line) => <li key={line}><InlineRich value={line.replace(/^[-*]\s/, "")} /></li>)}</ul>;
 
   const callout = isCallout(value);
-  const tone = calloutTone(value);
-  return <p className={callout ? `rich-callout${tone ? ` ${tone}` : ""}` : "rich-paragraph"} key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
+  if (callout) return <Callout tone={calloutTone(value)} lines={lines} id={`callout-${index}`} key={index} />;
+  return <p className="rich-paragraph" key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
 }
 
 export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true, moduleId }: Props) {
