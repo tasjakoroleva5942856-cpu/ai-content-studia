@@ -83,7 +83,7 @@ const modules: Module[] = [
   {
     id: 3, category: "Reels", eyebrow: "Модуль 3", title: "Создание Reels",
     description: "Своё видео, ИИ-аватар, Captions или собственная нейромонтажная студия.",
-    result: "Первый готовый Reels", icon: "▶", tone: "lime", duration: "9 уроков",
+    result: "Первый готовый Reels", icon: "▶", tone: "lime", duration: "11 уроков",
     lessons: toLessons(module3Content),
   },
   {
