@@ -38,12 +38,20 @@ const lessonOverrides: Record<string, { title?: string; note?: string }> = {
 };
 
 function lessonSummary(content: string) {
-  const line = content
+  // Абзацы вида "**Результат урока:** ..." (см. article-callout в LessonArticle
+  // ниже) уже показываются отдельной карточкой в теле урока — если взять их же
+  // сюда, подзаголовок над видео дословно повторит эту карточку. Пропускаем
+  // такие строки и ищем следующую содержательную.
+  const rawParagraphs = content.split("\n").map((item) => item.trim());
+  const candidate = rawParagraphs.find((item) => {
+    if (/^\*\*(Результат|Главное|Важно|Можно|Альтернатива|Самый простой|Никогда)/i.test(item)) return false;
+    const stripped = item.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[#*`]/g, "");
+    return stripped.length > 35;
+  });
+
+  const line = (candidate ?? rawParagraphs.find((item) => item.length > 35) ?? "")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[#*`]/g, "")
-    .split("\n")
-    .map((item) => item.trim())
-    .find((item) => item.length > 35) || "";
+    .replace(/[#*`]/g, "");
 
   const sentences = line.match(/[^.!?]+[.!?]+/g)?.map((item) => item.trim()) || [];
   if (sentences.length) {

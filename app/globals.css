@@ -437,14 +437,14 @@ button { font:inherit; }
 .module-preview .section-head .num { font-size:11px; font-weight:900; color:var(--muted); letter-spacing:.05em; }
 .module-preview .section-head h2 { margin:0; font-size:16.5px; font-weight:800; letter-spacing:-.01em; }
 .module-preview .plain-info { font-size:13.5px; line-height:1.65; color:#332e3c; margin:0 0 14px; }
-.module-preview .scenario-grid { display:flex; flex-direction:column; gap:20px; margin:18px 0; }
-.module-preview .scenario-grid .item { display:flex; align-items:flex-start; gap:13px; font-size:13.5px; line-height:1.6; color:#332e3c; }
-.module-preview .scenario-grid .item .ic { flex:0 0 auto; width:22px; height:22px; margin-top:1px; border-radius:6px; background:var(--preview-accent-soft); color:var(--preview-accent); display:grid; place-items:center; font-size:11px; }
-.module-preview .info-rows { display:flex; flex-direction:column; gap:22px; margin:18px 0; }
-.module-preview .info-rows .row { }
+.module-preview .scenario-grid { display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+.module-preview .scenario-grid .item { display:flex; align-items:center; gap:11px; padding:12px 14px; background:#faf9fc; border:1px solid #ece9f2; border-radius:12px; font-size:13px; line-height:1.5; color:#332e3c; }
+.module-preview .scenario-grid .item .ic { flex:0 0 auto; width:22px; height:22px; border-radius:7px; background:var(--preview-accent-soft); color:var(--preview-accent); display:grid; place-items:center; font-size:11px; }
+.module-preview .info-rows { display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+.module-preview .info-rows .row { padding:13px 14px; background:#faf9fc; border:1px solid #ece9f2; border-radius:12px; }
 .module-preview .info-rows .row .head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
 .module-preview .info-rows .row .head .name { display:flex; align-items:center; gap:9px; }
-.module-preview .info-rows .row .head b { font-size:14px; }
+.module-preview .info-rows .row .head b { font-size:13.5px; }
 .module-preview .info-rows .row .sub { font-size:13px; color:#5a5464; line-height:1.6; padding-left:33px; }
 .module-preview .dot-ic { width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; color:#fff; flex:0 0 auto; background:var(--preview-accent); }
 .module-preview .callout { display:flex; gap:11px; padding:14px 15px; border:1px solid #e0dcea; border-radius:8px; margin:14px 0; font-size:13px; line-height:1.55; background:#faf9fc; }
