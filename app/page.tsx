@@ -15,8 +15,13 @@ type Lesson = { id: string; title: string; note?: string; content?: string; sour
 type Module = {
   id: number; category: string; eyebrow: string; title: string;
   description: string; result: string; icon: string; tone: string;
-  duration: string; packages: Array<"flagship" | "content" | "marketing">; lessons: Lesson[];
+  duration: string; lessons: Lesson[];
 };
+
+// Модуль 0 открыт всем бесплатно. Модули 1-5 требуют активной подписки
+// (см. app/lib/access.ts и app/api/tribute-webhook — доступ выдаётся после
+// оплаты через Tribute). Модуль 6 показывается вместе с остальными по подписке.
+const FREE_MODULE_ID = 0;
 
 const subscriptionLessonId = "3c3b3828167181a6a64bf70b02c9dd27";
 const installLessonId = "3c6b382816718159b68ccd9fbfbad560";
@@ -59,43 +64,42 @@ const modules: Module[] = [
     id: 0, category: "Старт", eyebrow: "Модуль 0", title: "Вход в студию",
     description: "Настраиваем сервисы, папки и первый рабочий проект без технической путаницы.",
     result: "Инструменты готовы к работе", icon: "↗", tone: "sky", duration: "5 уроков",
-    packages: ["flagship", "content", "marketing"], lessons: toLessons(module0Content),
+    lessons: toLessons(module0Content),
   },
   {
     id: 1, category: "Маркетинг", eyebrow: "Модуль 1", title: "Фундамент бизнеса",
     description: "Собираем базу, благодаря которой агенты понимают вас, продукт и аудиторию.",
     result: "Готова база знаний бренда", icon: "◎", tone: "violet", duration: "4 блока",
-    packages: ["flagship", "marketing"], lessons: toLessons(module1Content),
+    lessons: toLessons(module1Content),
   },
   {
     id: 2, category: "Контент", eyebrow: "Модуль 2", title: "Контент-команда",
     description: "Создаём агентов с отдельными ролями и превращаем одну тему в несколько форматов.",
     result: "Тема превращается в контент-связку", icon: "✦", tone: "coral", duration: "5 уроков",
-    packages: ["flagship", "content"], lessons: toLessons(module2Content),
+    lessons: toLessons(module2Content),
   },
   {
     id: 3, category: "Reels", eyebrow: "Модуль 3", title: "Создание Reels",
     description: "Своё видео, ИИ-аватар, Captions или собственная нейромонтажная студия.",
     result: "Первый готовый Reels", icon: "▶", tone: "lime", duration: "9 уроков",
-    packages: ["flagship", "content"], lessons: toLessons(module3Content),
+    lessons: toLessons(module3Content),
   },
   {
     id: 4, category: "Маркетинг", eyebrow: "Модуль 4", title: "Контент, который продаёт",
     description: "Связываем упаковку, лид-магнит, прогрев и продукт в одну понятную систему.",
     result: "Контент ведёт к продукту", icon: "◇", tone: "peach", duration: "6 уроков",
-    packages: ["flagship", "marketing"], lessons: toLessons(module4Content),
+    lessons: toLessons(module4Content),
   },
   {
     id: 5, category: "Масштаб", eyebrow: "Модуль 5", title: "Масштабирование",
     description: "Адаптируем одну сильную тему под новые площадки без увеличения хаоса.",
     result: "Одна тема работает везде", icon: "↟", tone: "blue", duration: "7 уроков",
-    packages: ["flagship", "content"], lessons: toLessons(module5Content),
+    lessons: toLessons(module5Content),
   },
   {
     id: 6, category: "Реалити", eyebrow: "Модуль 6", title: "Реалити: как устроено у меня",
     description: "Показываю, как всё устроено в моём блоге — как ориентир, а не пошаговая инструкция.",
     result: "Система проверена на практике", icon: "●", tone: "pink", duration: "6 этапов",
-    packages: ["flagship", "marketing"],
     lessons: [
       { id: "reality-1", title: "Фундамент бизнеса и точка А", note: "Стратегия на реальном проекте", content: "## Что вы увидите\nКак я фиксирую текущую точку, цель, продукт и основную гипотезу продвижения. После выпуска вы повторяете этот этап на своём проекте и сохраняете свою точку А." },
       { id: "reality-2", title: "Сборка контент-команды", note: "Каких агентов создаю первой", content: "## Что вы увидите\nКак я выбираю первые роли в AI-команде, какие знания передаю агентам и как проверяю, что они понимают мой продукт и стиль." },
@@ -109,11 +113,11 @@ const modules: Module[] = [
 
 const filters = ["Все", "Старт", "Контент", "Reels", "Маркетинг", "Масштаб", "Реалити"];
 
-const packages = [
-  { id: "flagship" as const, label: "Флагман", title: "Вся AI CONTENT STUDIA", description: "Все модули, маркетинг, контент, монтаж, масштабирование и реалити.", mark: "FULL" },
-  { id: "content" as const, label: "AI-контент", title: "Контент-команда + нейромонтаж", description: "Агенты для контента, создание Reels и масштабирование на новые площадки.", mark: "CREATE" },
-  { id: "marketing" as const, label: "Маркетинг", title: "Система продаж через контент", description: "Стратегия, упаковка, продуктовая линейка, лид-магниты, воронки и реалити.", mark: "SYSTEM" },
-];
+// Ссылки на оплату в Tribute — задаются в переменных окружения на Vercel,
+// т.к. это реальные платёжные ссылки, которые появятся после того, как
+// в @tribute будут созданы два товара («1 месяц» и «3 месяца»).
+const TRIBUTE_LINK_1M = process.env.NEXT_PUBLIC_TRIBUTE_LINK_1M || "";
+const TRIBUTE_LINK_3M = process.env.NEXT_PUBLIC_TRIBUTE_LINK_3M || "";
 
 function plainText(value: string) {
   return value
@@ -225,7 +229,8 @@ function BrandMark() {
 export default function Home() {
   const [firstName, setFirstName] = useState("Наталья");
   const [filter, setFilter] = useState("Все");
-  const [packageFilter, setPackageFilter] = useState<"flagship" | "content" | "marketing">("flagship");
+  const [hasAccess, setHasAccess] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [activeModule, setActiveModule] = useState<Module | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [activeResource, setActiveResource] = useState<Lesson | null>(null);
@@ -234,12 +239,22 @@ export default function Home() {
 
   useEffect(() => {
     const telegram = (window as typeof window & {
-      Telegram?: { WebApp?: { ready?: () => void; expand?: () => void; initDataUnsafe?: { user?: { first_name?: string } } } };
+      Telegram?: { WebApp?: { ready?: () => void; expand?: () => void; initData?: string; initDataUnsafe?: { user?: { first_name?: string } } } };
     }).Telegram?.WebApp;
     telegram?.ready?.();
     telegram?.expand?.();
     const telegramName = telegram?.initDataUnsafe?.user?.first_name;
     if (telegramName) setFirstName(telegramName);
+
+    // Доступ к модулям 1-5 проверяем на сервере по подписи initData — см.
+    // app/api/access и app/lib/access.ts. Без initData (например, открыли
+    // страницу не из Telegram) доступ считается закрытым.
+    const initData = telegram?.initData;
+    if (!initData) return;
+    fetch("/api/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData }) })
+      .then((response) => (response.ok ? response.json() : { active: false }))
+      .then((data) => setHasAccess(Boolean(data.active)))
+      .catch(() => setHasAccess(false));
   }, []);
 
   useEffect(() => {
@@ -247,11 +262,12 @@ export default function Home() {
     requestAnimationFrame(() => lessonSheetRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
   }, [activeLesson?.id, activeResource?.id]);
 
+  const isLocked = (module: Module) => module.id !== FREE_MODULE_ID && !hasAccess;
+
   const visibleModules = useMemo(
-    () => modules.filter((item) => item.packages.includes(packageFilter) && (filter === "Все" || item.category === filter)),
-    [filter, packageFilter]
+    () => modules.filter((item) => filter === "Все" || item.category === filter),
+    [filter]
   );
-  const activePackage = packages.find((item) => item.id === packageFilter)!;
   const activeLessonIndex = activeModule && activeLesson ? activeModule.lessons.findIndex((item) => item.id === activeLesson.id) : -1;
   const nextLesson = activeModule && activeLessonIndex >= 0 ? activeModule.lessons[activeLessonIndex + 1] : undefined;
   const resources = useMemo(() => toLessons(resourceContent), []);
@@ -260,12 +276,16 @@ export default function Home() {
     ...resources.map(({ id, title, sourceUrl }) => ({ id, title, sourceUrl })),
   ], [resources]);
 
-  const openModule = (module: Module) => { setActiveModule(module); setActiveLesson(null); setActiveResource(null); };
+  const openModule = (module: Module) => {
+    if (isLocked(module)) { setShowPaywall(true); return; }
+    setActiveModule(module); setActiveLesson(null); setActiveResource(null);
+  };
   const openLessonById = (lessonId: string) => {
     const resource = resources.find((item) => item.id === lessonId);
     if (resource) { setActiveResource(resource); return; }
     const targetModule = modules.find((module) => module.lessons.some((lesson) => lesson.id === lessonId));
     const targetLesson = targetModule?.lessons.find((lesson) => lesson.id === lessonId);
+    if (targetModule && isLocked(targetModule)) { setShowPaywall(true); return; }
     if (targetModule && targetLesson) { setActiveModule(targetModule); setActiveLesson(targetLesson); setActiveResource(null); }
   };
   const closeModule = () => { setActiveModule(null); setActiveLesson(null); setActiveResource(null); };
@@ -298,25 +318,14 @@ export default function Home() {
             </div>
           </section>
           <section className="quick-stats" aria-label="Кратко о курсе">
-            <div><strong>{modules.filter((item) => item.packages.includes(packageFilter)).length}</strong><span>модулей в пакете</span></div>
-            <div><strong>{modules.filter((item) => item.packages.includes(packageFilter)).reduce((sum, item) => sum + item.lessons.length, 0)}</strong><span>материалов</span></div>
+            <div><strong>{modules.length}</strong><span>модулей в программе</span></div>
+            <div><strong>{modules.reduce((sum, item) => sum + item.lessons.length, 0)}</strong><span>материалов</span></div>
             <div><strong>1</strong><span>готовая система</span></div>
           </section>
           <section className="packages-section">
-            <div className="packages-title"><div><p>ВЫБЕРИТЕ ПРОГРАММУ</p><h2>Пакеты обучения</h2></div><span>ДЕМО</span></div>
-            <div className="package-switcher">
-              {packages.map((item) => (
-                <button
-                  key={item.id}
-                  className={packageFilter === item.id ? "active" : ""}
-                  onClick={() => { setPackageFilter(item.id); setFilter("Все"); }}
-                >
-                  <small>{item.mark}</small><strong>{item.label}</strong><span>{item.title}</span>
-                </button>
-              ))}
-            </div>
-            <div className="package-summary"><span>✓</span><div><strong>{activePackage.title}</strong><small>{activePackage.description}</small></div></div>
-            <div className="personal-service"><span>ЛИЧНОЕ ВНЕДРЕНИЕ</span><p>Дополнительная услуга: вместе собираем систему под ваш проект и доводим её до рабочего результата.</p><button>Узнать подробнее</button></div>
+            <div className="packages-title"><div><p>КАК ЭТО УСТРОЕНО</p><h2>Начните бесплатно с Модуля 0</h2></div></div>
+            <p className="store-fineprint">Модуль 0 — настройка сервисов и первый рабочий агент — открыт для всех бесплатно, без подписки. Модули 1–5 открываются по подписке, когда вы решите продолжить.</p>
+            <div className="personal-service"><span>ЛИЧНОЕ ВНЕДРЕНИЕ</span><p>Дополнительная услуга: вместе собираем систему под ваш проект и доводим её до рабочего результата.</p><button disabled title="Отдельная услуга — страница появится позже, пока пишите в личные сообщения">Узнать подробнее</button></div>
           </section>
           <nav className="filters" aria-label="Фильтр модулей">
             {filters.map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}
@@ -331,7 +340,7 @@ export default function Home() {
                 <div className="module-content">
                   <div className="module-meta"><span>{module.eyebrow}</span><span>{module.duration}</span></div>
                   <h3>{module.title}</h3><p>{module.description}</p>
-                  <div className="module-result"><span>✓</span>{module.result}</div>
+                  <div className="module-result">{isLocked(module) ? <><span>🔒</span>По подписке</> : <><span>✓</span>{module.result}</>}</div>
                 </div>
               </button>
             ))}
@@ -340,16 +349,16 @@ export default function Home() {
           <section className="learning-page">
             <p className="section-kicker">МОЁ ОБУЧЕНИЕ</p><h1>Продолжить обучение</h1>
             <div className="progress-card">
-              <div className="progress-top"><span>{activePackage.label}</span><strong>0%</strong></div>
+              <div className="progress-top"><span>Вся программа</span><strong>0%</strong></div>
               <div className="progress-track"><i /></div>
               <p>После подключения доступа здесь появится ваш реальный прогресс.</p>
             </div>
             <h2>Ваш маршрут</h2>
             <div className="route-list">
-              {modules.filter((module) => module.packages.includes(packageFilter)).map((module, index) => (
+              {modules.map((module, index) => (
                 <button key={module.id} onClick={() => openModule(module)}>
-                  <span className={`route-index ${module.tone}`}>{index + 1}</span>
-                  <span><strong>{module.title}</strong><small>{module.duration}</small></span><b>›</b>
+                  <span className={`route-index ${module.tone}`}>{isLocked(module) ? "🔒" : index + 1}</span>
+                  <span><strong>{module.title}</strong><small>{isLocked(module) ? "По подписке" : module.duration}</small></span><b>›</b>
                 </button>
               ))}
             </div>
@@ -403,6 +412,58 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </section>
+        </div>
+      )}
+
+      {showPaywall && (
+        <div className="sheet-backdrop" role="presentation" onMouseDown={() => setShowPaywall(false)}>
+          <section className="lesson-sheet paywall-sheet" role="dialog" aria-modal="true" aria-label="Подписка" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="sheet-handle" />
+            <div className="paywall-body">
+              <button className="close-button" onClick={() => setShowPaywall(false)} aria-label="Закрыть">×</button>
+              <p className="section-kicker">Модуль 0 — ваш навсегда. Дальше — по подписке</p>
+              <h2 className="paywall-title">Откройте все модули студии</h2>
+              <p className="paywall-sub">Агенты и файлы, которые вы настроите на уроках, остаются у вас навсегда — даже если подписка закончится.</p>
+              <div className="payment-warning">
+                <span>!</span>
+                <div>
+                  <small>ЧЕСТНО О ЦЕНЕ</small>
+                  <h4>Сейчас курс в открытом тестировании</h4>
+                  <p>Цена ниже реальной ценности продукта. По мере роста курса стоимость подписки тоже будет расти. Оформив подписку сейчас, вы фиксируете сегодняшнюю цену на всё время, пока она у вас активна.</p>
+                </div>
+              </div>
+              <div className="paywall-options">
+                <div className="paywall-option">
+                  <div className="top-row"><span className="label">1 месяц</span><span className="price">3 900 ₽<span> /мес</span></span></div>
+                  <p className="note">Доступ на 30 дней с момента оплаты. Захотите продолжить — оформите ещё раз.</p>
+                  <a
+                    className="paywall-cta"
+                    href={TRIBUTE_LINK_1M || undefined}
+                    target="_blank" rel="noreferrer"
+                    aria-disabled={!TRIBUTE_LINK_1M}
+                    onClick={(event) => { if (!TRIBUTE_LINK_1M) event.preventDefault(); }}
+                  >
+                    {TRIBUTE_LINK_1M ? "Оформить за 3 900 ₽" : "Скоро откроем оплату"}
+                  </a>
+                </div>
+                <div className="paywall-option highlight">
+                  <span className="badge">Экономия 1 800 ₽</span>
+                  <div className="top-row"><span className="label">3 месяца сразу</span><span className="price">9 900 ₽<span> за 3 мес.</span></span></div>
+                  <p className="note">Фиксирует сегодняшнюю цену на 3 месяца вперёд, даже если стоимость подписки успеет вырасти.</p>
+                  <a
+                    className="paywall-cta"
+                    href={TRIBUTE_LINK_3M || undefined}
+                    target="_blank" rel="noreferrer"
+                    aria-disabled={!TRIBUTE_LINK_3M}
+                    onClick={(event) => { if (!TRIBUTE_LINK_3M) event.preventDefault(); }}
+                  >
+                    {TRIBUTE_LINK_3M ? "Оформить за 9 900 ₽" : "Скоро откроем оплату"}
+                  </a>
+                </div>
+              </div>
+              <p className="store-fineprint">Оплата проходит через Tribute. После оплаты доступ откроется автоматически в течение минуты — если модуль всё ещё закрыт, откройте студию заново.</p>
+            </div>
           </section>
         </div>
       )}
