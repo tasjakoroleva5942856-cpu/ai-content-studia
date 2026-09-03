@@ -90,6 +90,37 @@ function tokenize(content: string) {
   return tokens.filter(Boolean);
 }
 
+type PhaseInfo = { phase: 0 | 1 | 2; step?: number; total?: number; note?: string };
+const PHASE_LABELS = ["Вход", "Настройка", "Съёмка и монтаж"];
+
+function parsePhase(boldLead: string): PhaseInfo | null {
+  const text = boldLead.replace(/\.$/, "").trim();
+  if (/^Вход в модуль$/.test(text)) return { phase: 0 };
+  let match = text.match(/^Настройка\s*·\s*Шаг\s*(\d+)\s*из\s*(\d+)(?:\s*·\s*(.+))?$/);
+  if (match) return { phase: 1, step: Number(match[1]), total: Number(match[2]), note: match[3] };
+  match = text.match(/^Съёмка и монтаж\s*·\s*Урок\s*(\d+)\s*из\s*(\d+)(?:\s*·\s*(.+))?$/);
+  if (match) return { phase: 2, step: Number(match[1]), total: Number(match[2]), note: match[3] };
+  return null;
+}
+
+function PhaseTrack({ info }: { info: PhaseInfo }) {
+  return (
+    <div className="phase-track-wrap">
+      <div className="phase-track">
+        {PHASE_LABELS.map((label, index) => (
+          <span className={`seg ${index === info.phase ? "active" : index < info.phase ? "done" : ""}`} key={label}>{label}</span>
+        ))}
+      </div>
+      {(info.step || info.note) && (
+        <p className="phase-track-caption">
+          {info.step && info.total ? <b>Шаг {info.step} из {info.total}</b> : null}
+          {info.note ? <span>{info.step ? " · " : ""}{info.note}</span> : null}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function AppIcon({ app, compact = false }: { app: AppInfo; compact?: boolean }) {
   return (
     <span className={`rich-app-icon ${app.tone} ${compact ? "compact" : ""}`} aria-hidden="true">
@@ -113,7 +144,7 @@ function InlineRich({ value }: { value: string }) {
       const lesson = navigation.resolve(link[2]);
       if (lesson) return <button type="button" className="internal-lesson-link" key={index} onClick={() => navigation.open(lesson.id)}>{link[1]} <span>→</span></button>;
       if (link[2].includes("app.notion.com")) return <span className="notion-reference" key={index}>{link[1]}</span>;
-      return <a key={index} href={link[2]} target="_blank" rel="noreferrer">{link[1]} ↗</a>;
+      return <a className="link-chip" key={index} href={link[2]} target="_blank" rel="noreferrer">{link[1]} <span>↗</span></a>;
     }
     const app = appCatalog.find((item) => item.name.toLowerCase() === part.toLowerCase());
     if (app) return <span className="inline-app" key={index}><AppIcon app={app} compact />{part}</span>;
@@ -323,6 +354,14 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
   const outcome = outcomeIndex >= 0 ? intro[outcomeIndex].replace(/^\*\*Результат(?: урока)?[:*\s]*/i, "").trim() : "";
   const introBody = intro.filter((_, index) => index !== outcomeIndex);
 
+  const leadMatch = introBody[0]?.match(/^\*\*([^*]+)\*\*/);
+  const phaseInfo = leadMatch ? parsePhase(leadMatch[1]) : null;
+  if (phaseInfo && leadMatch) {
+    const remainder = introBody[0].slice(leadMatch[0].length).trimStart();
+    introBody[0] = remainder;
+    if (!remainder) introBody.shift();
+  }
+
   const renderSection = (section: { title: string; blocks: string[] }, sectionIndex: number, prefix = "lesson") => {
     const step = section.title.match(/^Шаг\s*(\d+)/i)?.[1];
     const isDocument = /Полная методика|Системный промпт|Короткая инструкция/i.test(section.title);
@@ -334,6 +373,8 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
 
   return (
     <LessonNavigationContext.Provider value={navigation}><article className="rich-lesson-article">
+      {phaseInfo && <PhaseTrack info={phaseInfo} />}
+
       {outcome && <div className="outcome-card"><span>✓</span><div><small>РЕЗУЛЬТАТ УРОКА</small><strong><InlineRich value={outcome} /></strong></div></div>}
 
       {showTools && tools.length > 0 && <section className="lesson-tools"><div className="rich-section-heading"><div><p>ИНСТРУМЕНТЫ УРОКА</p><h4>Что будем использовать</h4></div><span>{tools.length}</span></div><div className="lesson-tools-grid">{tools.map((app) => <a href={app.url} target="_blank" rel="noreferrer" key={app.name}><AppIcon app={app} /><span><strong>{app.name}</strong><small>{app.label}</small></span><b>↗</b></a>)}</div></section>}

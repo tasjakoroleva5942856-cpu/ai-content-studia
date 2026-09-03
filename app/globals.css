@@ -210,6 +210,13 @@ button { font:inherit; }
 .lesson-material>span { width:42px; height:42px; display:grid; place-items:center; border-radius:13px; background:#fff; color:#6548d2; font-weight:900; }
 .lesson-material strong,.lesson-material small { display:block; }.lesson-material strong { font-size:14px; }.lesson-material small { margin-top:4px; color:#8a8490; font-size:10px; }.lesson-material b { color:#938c98; }
 .structured-lesson { margin-top:4px; color:#28252c; }
+.phase-track-wrap { margin:0 0 22px; }
+.phase-track { display:flex; gap:6px; }
+.phase-track .seg { flex:1; text-align:center; padding:8px 5px; border-radius:10px; font-size:9px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:#f4f2f6; color:#9a949e; }
+.phase-track .seg.active { background:#7557ff; color:#fff; }
+.phase-track .seg.done { background:#eee9ff; color:#6548d2; }
+.phase-track-caption { margin:9px 2px 0; color:#847e8e; font-size:11px; font-weight:700; }
+.phase-track-caption b { color:#4a4553; font-weight:900; }
 .outcome-card { display:grid; grid-template-columns:40px 1fr; gap:13px; align-items:center; margin:0 0 34px; padding:17px; border-radius:21px; background:linear-gradient(135deg,#eee9ff,#f7f4ff); }
 .outcome-card>span { width:40px; height:40px; display:grid; place-items:center; border-radius:13px; background:#7658e8; color:#fff; font-size:16px; font-weight:900; box-shadow:0 8px 20px rgba(118,88,232,.24); }
 .outcome-card small,.outcome-card strong { display:block; }.outcome-card small { margin-bottom:5px; color:#786d8b; font-size:8px; font-weight:900; letter-spacing:.14em; }.outcome-card strong { font-size:14px; line-height:1.42; }
@@ -293,6 +300,9 @@ button { font:inherit; }
 .structured-checklist label { display:grid; grid-template-columns:23px 1fr; gap:11px; align-items:center; padding:12px; border-radius:15px; background:#fff; color:#403c45; font-size:12px; font-weight:680; cursor:pointer; }.structured-checklist input { width:20px; height:20px; margin:0; accent-color:#7657ff; }
 .rich-lesson-article { margin-top:2px; color:#2d2931; }
 .rich-lesson-article a { color:inherit; text-decoration:none; }
+.rich-lesson-article a.link-chip { display:inline-flex; align-items:center; gap:6px; margin:2px 0; padding:6px 12px; border-radius:9px; background:#eee9ff; color:#5c3fd0 !important; font-size:12.5px; font-weight:750; vertical-align:middle; }
+.rich-lesson-article a.link-chip span { font-size:11px; opacity:.65; }
+.rich-lesson-article a.link-chip:hover { background:#e3daff; }
 .lesson-tools { margin:0 0 34px; }
 .rich-section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin-bottom:14px; }
 .rich-section-heading p { margin:0 0 6px; color:#8c8691; font-size:8px; font-weight:900; letter-spacing:.15em; }
