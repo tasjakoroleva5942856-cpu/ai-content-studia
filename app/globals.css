@@ -298,7 +298,12 @@ button { font:inherit; }
 .doc-panel h5 { margin:22px 0 8px; font-size:17px; }.doc-panel h5:first-of-type { margin-top:0; }.doc-panel p,.doc-panel li { color:rgba(255,255,255,.67); font-size:12px; font-weight:570; line-height:1.55; }.doc-panel p { margin:0; }.doc-panel ul { margin:0; padding-left:18px; }
 .structured-checklist { display:grid; gap:8px; padding:12px; border-radius:22px; background:#f4f3f5; }
 .structured-checklist label { display:grid; grid-template-columns:23px 1fr; gap:11px; align-items:center; padding:12px; border-radius:15px; background:#fff; color:#403c45; font-size:12px; font-weight:680; cursor:pointer; }.structured-checklist input { width:20px; height:20px; margin:0; accent-color:#7657ff; }
-.rich-lesson-article { margin-top:2px; color:#2d2931; }
+.rich-lesson-article { margin-top:2px; color:#2d2931; --lesson-accent:var(--accent); --lesson-accent-soft:#f1edff; }
+.rich-lesson-article.mod1 { --lesson-accent:var(--m1-accent); --lesson-accent-soft:var(--m1-accent-soft); }
+.rich-lesson-article.mod2 { --lesson-accent:var(--m2-accent); --lesson-accent-soft:var(--m2-accent-soft); }
+.rich-lesson-article.mod3 { --lesson-accent:var(--m3-accent); --lesson-accent-soft:var(--m3-accent-soft); }
+.rich-lesson-article.mod4 { --lesson-accent:var(--m4-accent); --lesson-accent-soft:var(--m4-accent-soft); }
+.rich-lesson-article.mod5 { --lesson-accent:var(--m5-accent); --lesson-accent-soft:var(--m5-accent-soft); }
 .rich-lesson-article a { color:inherit; text-decoration:none; }
 .rich-lesson-article a.link-chip { display:inline-flex; align-items:center; gap:6px; margin:2px 0; padding:6px 12px; border-radius:9px; background:#eee9ff; color:#5c3fd0 !important; font-size:12.5px; font-weight:750; vertical-align:middle; }
 .rich-lesson-article a.link-chip span { font-size:11px; opacity:.65; }
@@ -345,8 +350,9 @@ button { font:inherit; }
 .instruction-section-body h6 { margin:22px 0 9px; color:#36313a; font-size:15px; }
 .rich-paragraph { margin:0 0 17px; color:#716d75; font-size:15px; font-weight:575; line-height:1.62; letter-spacing:-.01em; }.rich-paragraph:last-child { margin-bottom:0; }.rich-paragraph strong { color:#28242c; font-weight:850; }.rich-paragraph a { color:#1677ff; font-weight:800; }
 .rich-paragraph code,.rich-callout code { padding:2px 6px; border-radius:7px; background:#efedf2; color:#2a2530; font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; }
-.rich-callout { position:relative; margin:15px 0; padding:17px 17px 17px 49px; border-radius:19px; background:#f1edff; color:#5c536b; font-size:14px; font-weight:620; line-height:1.55; }.rich-callout::before { content:"✓"; position:absolute; left:15px; top:16px; width:24px; height:24px; display:grid; place-items:center; border-radius:8px; background:#7658e8; color:#fff; font-size:11px; font-weight:900; }
+.rich-callout { position:relative; margin:15px 0; padding:17px 17px 17px 49px; border-radius:19px; background:var(--lesson-accent-soft); color:#164a66; font-size:14px; font-weight:620; line-height:1.55; }.rich-callout::before { content:"💡"; position:absolute; left:15px; top:16px; width:24px; height:24px; display:grid; place-items:center; border-radius:8px; background:var(--lesson-accent); color:#fff; font-size:11px; font-weight:900; }
 .rich-callout.amber { background:#faeaf3; color:#7d3560; }.rich-callout.amber::before { content:"⚠"; background:#a8447a; border-radius:50%; }
+.rich-callout.green { background:#eaf7f0; color:#155c3c; }.rich-callout.green::before { content:"✓"; background:#1c8a5a; border-radius:50%; }
 .rich-bullet-list { margin:12px 0 19px; padding:15px 18px 15px 38px; border-radius:19px; background:#f5f4f6; }.rich-bullet-list li { margin:8px 0; padding-left:3px; color:#5f5a64; font-size:14px; font-weight:610; line-height:1.5; }.rich-bullet-list li::marker { color:#7657ff; }
 .lesson-step-group .real-step-list { margin-top:2px; }
 .real-step-list { counter-reset:rich-step; display:flex; flex-direction:column; gap:10px; margin:13px 0 20px; padding:0; list-style:none; }
@@ -480,7 +486,7 @@ button { font:inherit; }
 .module-preview .info-rows .row .head b, .rich-lesson-article .info-rows .row .head b { font-size:13.5px; }
 .module-preview .info-rows .row .sub, .rich-lesson-article .info-rows .row .sub { font-size:13px; color:#5a5464; line-height:1.6; padding-left:33px; }
 .module-preview .dot-ic, .rich-lesson-article .dot-ic { width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; color:#fff; flex:0 0 auto; background:var(--preview-accent); }
-.rich-lesson-article .dot-ic { background:var(--accent); }
+.rich-lesson-article .dot-ic { background:var(--lesson-accent); }
 .module-preview .callout { display:flex; gap:11px; padding:14px 15px; border:1px solid #e0dcea; border-radius:8px; margin:14px 0; font-size:13px; line-height:1.55; background:#faf9fc; }
 .module-preview .callout > div { min-width:0; }
 .module-preview .callout .ic { flex:0 0 auto; font-size:15px; }

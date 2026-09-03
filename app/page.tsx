@@ -433,7 +433,7 @@ export default function Home() {
                 {(activeResource || activeLesson.id !== subscriptionLessonId) && <p className="lesson-label">{activeResource ? "МАТЕРИАЛ" : "УРОК"}</p>}<h3>{(activeResource || activeLesson).title}</h3><p className="lesson-note">{(activeResource || activeLesson).note}</p>
                 {!activeResource && activeLesson.id === subscriptionLessonId
                   ? <SubscriptionLesson />
-                  : (activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} />}
+                  : (activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} moduleId={activeModule.id} />}
                 {activeResource ? <footer className="lesson-footer resource-footer">
                   <button className="complete-button" onClick={() => setActiveResource(null)}>Вернуться к уроку</button>
                 </footer> : <footer className="lesson-footer">

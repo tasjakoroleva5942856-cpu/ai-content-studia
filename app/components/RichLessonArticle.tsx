@@ -4,8 +4,14 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 import { copyText } from "../lib/fileActions";
 
 type CourseLessonLink = { id: string; title: string; sourceUrl?: string };
-type Props = { lessonId: string; title: string; content: string; courseLessons: CourseLessonLink[]; onOpenLesson: (id: string) => void; showTools?: boolean };
+type Props = { lessonId: string; title: string; content: string; courseLessons: CourseLessonLink[]; onOpenLesson: (id: string) => void; showTools?: boolean; moduleId?: number };
 type NavigationContextValue = { resolve: (url: string) => CourseLessonLink | undefined; open: (id: string) => void };
+
+// Same module-id → CSS-class convention as ModulePreview.tsx's moduleToneClass,
+// so `.rich-lesson-article.mod1` etc can resolve --lesson-accent to that module's
+// real color (see globals.css). Module 0 has no dedicated accent, so it falls
+// back to the generic --accent/--accent-soft tokens (empty class).
+const moduleToneClass: Record<number, string> = { 0: "", 1: "mod1", 2: "mod2", 3: "mod3", 4: "mod4", 5: "mod5" };
 
 const LessonNavigationContext = createContext<NavigationContextValue>({ resolve: () => undefined, open: () => undefined });
 
@@ -304,6 +310,21 @@ function StartVariantRows({ rows }: { rows: string[][] }) {
   })}</div>;
 }
 
+// Numbered folder/item lists (e.g. "01_База_знаний — сюда лягут файлы...") render
+// as numbered circle-badge rows in the design mockup's `.scenario-grid` (screen #p1a,
+// "Зачем именно так" section) — badges carry the item's own number (folder number),
+// not sequential list position. Reuses the `.info-rows`/`.dot-ic` markup/CSS.
+const FOLDER_ITEM = /^(\d{2})_(\S+)\s*—\s*(.+)$/;
+
+function FolderNumberRows({ items }: { items: Array<{ number: string; label: string; description: string }> }) {
+  return <div className="info-rows">{items.map((item) => (
+    <div className="row" key={item.number}>
+      <div className="head"><span className="name"><span className="dot-ic">{item.number}</span><b>{item.label.replace(/_/g, " ")}</b></span></div>
+      <div className="sub"><InlineRich value={item.description} /></div>
+    </div>
+  ))}</div>;
+}
+
 const SERVICE_NEED_LABELS: Record<string, string> = { "Да": "нужен сейчас" };
 
 function ServicePriceRows({ rows }: { rows: string[][] }) {
@@ -435,6 +456,24 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
   return result;
 }
 
+// Callout detection: a bold-lead paragraph starting with one of these words (or
+// an explicit ⚠️) is rendered as a `.rich-callout` instead of a plain paragraph.
+// "Готово"/"Можно" mark a successful-completion callout (mockup's `.callout.green`,
+// e.g. "**Готово, если** ...", "**Можно двигаться дальше, если:**") — those get
+// routed to the green tone specifically, below.
+const CALLOUT_LEAD_WORDS = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило|Готово|Можно)/i;
+const CALLOUT_GREEN_WORDS = /^\*\*(Готово|Можно)/i;
+
+function calloutTone(value: string): "amber" | "green" | "" {
+  if (value.includes("⚠️")) return "amber";
+  if (CALLOUT_GREEN_WORDS.test(value)) return "green";
+  return "";
+}
+
+function isCallout(value: string) {
+  return CALLOUT_LEAD_WORDS.test(value) || value.includes("⚠️");
+}
+
 const ROUTE_HEAD = /^###\s*Маршрут\s*([А-Яа-яA-Za-z])\.\s*(.+)$/;
 const INFO_CARD_ICONS: Record<string, string> = { "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯", "Сохранить на компьютер": "💻", "Загрузить в базу знаний": "📥" };
 
@@ -462,23 +501,29 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
     const introLines = lines.slice(0, firstNumberedIndex);
     const stepLines = lines.slice(firstNumberedIndex);
     const introValue = introLines.join("\n");
-    const introIsWarning = introValue.includes("⚠️");
-    const introIsCallout = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило)/i.test(introValue) || introIsWarning;
+    const introIsCallout = isCallout(introValue);
+    const introTone = calloutTone(introValue);
     return <div className="lesson-step-group" key={index}>
-      <p className={introIsCallout ? `rich-callout${introIsWarning ? " amber" : ""}` : "rich-paragraph"}>{introLines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < introLines.length - 1 && <br />}</span>)}</p>
+      <p className={introIsCallout ? `rich-callout${introTone ? ` ${introTone}` : ""}` : "rich-paragraph"}>{introLines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < introLines.length - 1 && <br />}</span>)}</p>
       <ol className="real-step-list">{stepLines.map((line) => <li key={line}><span><InlineRich value={line.replace(/^\d+[.)]\s/, "")} /></span></li>)}</ol>
     </div>;
+  }
+
+  const folderMatches = lines.map((line) => line.replace(/^[-*]\s+/, "").match(FOLDER_ITEM));
+  if (lines.length > 1 && folderMatches.every(Boolean)) {
+    const items = folderMatches.map((match) => ({ number: match![1], label: match![2], description: match![3] }));
+    return <FolderNumberRows items={items} key={index} />;
   }
 
   const bullets = lines.every((line) => /^[-*]\s/.test(line));
   if (bullets) return <ul className="rich-bullet-list" key={index}>{lines.map((line) => <li key={line}><InlineRich value={line.replace(/^[-*]\s/, "")} /></li>)}</ul>;
 
-  const isWarning = value.includes("⚠️");
-  const callout = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило)/i.test(value) || isWarning;
-  return <p className={callout ? `rich-callout${isWarning ? " amber" : ""}` : "rich-paragraph"} key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
+  const callout = isCallout(value);
+  const tone = calloutTone(value);
+  return <p className={callout ? `rich-callout${tone ? ` ${tone}` : ""}` : "rich-paragraph"} key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
 }
 
-export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true }: Props) {
+export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true, moduleId }: Props) {
   const prepared = useMemo(() => contentWithoutNavigation(content), [content]);
   const navigation = useMemo<NavigationContextValue>(() => {
     const lessonMap = new Map(courseLessons.map((lesson) => [notionPageId(lesson.sourceUrl || ""), lesson]));
@@ -517,8 +562,10 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
     </section>;
   };
 
+  const toneClass = moduleId != null ? moduleToneClass[moduleId] || "" : "";
+
   return (
-    <LessonNavigationContext.Provider value={navigation}><article className="rich-lesson-article">
+    <LessonNavigationContext.Provider value={navigation}><article className={`rich-lesson-article ${toneClass}`.trim()}>
       {phaseInfo && <PhaseTrack info={phaseInfo} />}
 
       {outcome && <div className="outcome-card"><span>✓</span><div><small>РЕЗУЛЬТАТ УРОКА</small><strong><InlineRich value={outcome} /></strong></div></div>}
