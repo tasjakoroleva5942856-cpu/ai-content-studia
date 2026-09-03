@@ -146,8 +146,6 @@ function InlineRich({ value }: { value: string }) {
       if (link[2].includes("app.notion.com")) return <span className="notion-reference" key={index}>{link[1]}</span>;
       return <a className="link-chip" key={index} href={link[2]} target="_blank" rel="noreferrer">{link[1]} <span>↗</span></a>;
     }
-    const app = appCatalog.find((item) => item.name.toLowerCase() === part.toLowerCase());
-    if (app) return <span className="inline-app" key={index}><AppIcon app={app} compact />{part}</span>;
     return <span key={index}>{part}</span>;
   })}</>;
 }
