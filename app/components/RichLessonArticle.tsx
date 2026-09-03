@@ -201,12 +201,20 @@ function PromptDocument({ code, title }: { code: string; title: string }) {
   return (
     <div className={`prompt-document ${expanded ? "expanded" : ""}`}>
       <div className="prompt-document-head">
-        <div className="prompt-doc-icon">AI</div>
-        <div><strong>{documentTitle}</strong><small>{documentHint}</small></div>
+        <strong>{documentTitle}</strong>
+        <span className="prompt-document-badge">AI</span>
       </div>
-      <pre>{prepared}</pre>
-      <p className="prompt-copy-help">После копирования текст временно хранится в буфере обмена. Откройте {isInstallerMessage ? "Claude Code или Codex" : "сервис, указанный в шаге"}, нажмите в поле сообщения и выберите «Вставить».</p>
-      <div className="prompt-document-actions"><button onClick={() => setExpanded((value) => !value)}>{expanded ? "Свернуть" : "Открыть полностью"}</button><button onClick={handleCopy}>{copyState}</button></div>
+      <p className="prompt-document-hint">{documentHint}</p>
+      <details
+        className="prompt-document-details"
+        open={expanded}
+        onToggle={(event) => setExpanded(event.currentTarget.open)}
+      >
+        <summary>{expanded ? "Свернуть ←" : "Открыть полностью →"}</summary>
+        <pre>{prepared}</pre>
+        <p className="prompt-copy-help">После копирования текст временно хранится в буфере обмена. Откройте {isInstallerMessage ? "Claude Code или Codex" : "сервис, указанный в шаге"}, нажмите в поле сообщения и выберите «Вставить».</p>
+        <button type="button" className={copyState.startsWith("Скопировано") ? "copied" : ""} onClick={handleCopy}>{copyState}</button>
+      </details>
     </div>
   );
 }
