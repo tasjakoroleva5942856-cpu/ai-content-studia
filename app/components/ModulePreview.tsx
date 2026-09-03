@@ -102,7 +102,7 @@ export default function ModulePreview({
             ))}
           </div>
         )}
-        <div className="callout">
+        <div className="callout accent-callout">
           <span className="ic">💡</span>
           <div>{content.freebie.calloutText}</div>
         </div>
