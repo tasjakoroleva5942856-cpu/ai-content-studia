@@ -274,7 +274,40 @@ function PromptAngles({ rows }: { rows: string[][] }) {
 
 function RichTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   if (headers[0] === "Ракурс") return <PromptAngles rows={rows} />;
+  if (headers[0] === "Вариант") return <StartVariantRows rows={rows} />;
+  if (headers[0] === "Сервис") return <ServicePriceRows rows={rows} />;
   return <div className="rich-table"><div className="rich-table-head">{headers.map((header) => <span key={header}>{header}</span>)}</div><div className="rich-table-body">{rows.map((row, rowIndex) => <div className="rich-table-row" key={rowIndex}>{row.map((cell, cellIndex) => <div key={cellIndex}><small>{headers[cellIndex]}</small><span><InlineRich value={cell} /></span></div>)}</div>)}</div></div>;
+}
+
+// Module 0, Lesson 1's "Три варианта старта" and "Сервис/цена" tables render as
+// `.info-rows` cards (dot-ic badge + bold name + description line) in the design
+// mockup (lessonredesignmockup.html, screen #p0) instead of the generic grid table —
+// reusing the exact `.info-rows`/`.row`/`.dot-ic` markup already used by
+// ImplementationPage.tsx and ModulePreview.tsx.
+const START_VARIANT_ICONS: Record<string, string> = { "Тестовый": "🧪", "Основной": "🚀", "Полный": "⭐" };
+
+function StartVariantRows({ rows }: { rows: string[][] }) {
+  return <div className="info-rows">{rows.map((row) => {
+    const name = clean(row[0]);
+    return <div className="row" key={name}>
+      <div className="head"><span className="name"><span className="dot-ic">{START_VARIANT_ICONS[name] || "•"}</span><b>{name}</b></span></div>
+      <div className="sub"><InlineRich value={row[1]} /> — <InlineRich value={row[2]} /></div>
+    </div>;
+  })}</div>;
+}
+
+const SERVICE_NEED_LABELS: Record<string, string> = { "Да": "нужен сейчас" };
+
+function ServicePriceRows({ rows }: { rows: string[][] }) {
+  return <div className="info-rows">{rows.map((row) => {
+    const name = clean(row[0]);
+    const need = clean(row[1]);
+    const needLabel = SERVICE_NEED_LABELS[need] || need.toLowerCase();
+    return <div className="row" key={name}>
+      <div className="head"><span className="name"><span className="dot-ic">{name === "Google Drive" ? "📁" : name[0]}</span><b>{name}</b></span></div>
+      <div className="sub">{needLabel} · <InlineRich value={row[2]} /> — <InlineRich value={row[3]} /></div>
+    </div>;
+  })}</div>;
 }
 
 type RouteInfo = { key: string; label: string; nodes: ReactNode[] };
