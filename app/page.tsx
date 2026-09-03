@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import SubscriptionLesson from "./components/SubscriptionLesson";
 import RichLessonArticle from "./components/RichLessonArticle";
+import ModulePreview from "./components/ModulePreview";
 import { module0Content, type CourseLessonContent } from "./content/module-0";
 import { module1Content } from "./content/module-1";
 import { module2Content } from "./content/module-2";
@@ -10,6 +11,7 @@ import { module3Content } from "./content/module-3";
 import { module4Content } from "./content/module-4";
 import { module5Content } from "./content/module-5";
 import { resourceContent } from "./content/resources";
+import { modulePreviews } from "./content/modulePreviews";
 
 type Lesson = { id: string; title: string; note?: string; content?: string; sourceUrl?: string };
 type Module = {
@@ -96,22 +98,19 @@ const modules: Module[] = [
     result: "Одна тема работает везде", icon: "↟", tone: "blue", duration: "7 уроков",
     lessons: toLessons(module5Content),
   },
-  {
-    id: 6, category: "Реалити", eyebrow: "Модуль 6", title: "Реалити: как устроено у меня",
-    description: "Показываю, как всё устроено в моём блоге — как ориентир, а не пошаговая инструкция.",
-    result: "Система проверена на практике", icon: "●", tone: "pink", duration: "6 этапов",
-    lessons: [
-      { id: "reality-1", title: "Фундамент бизнеса и точка А", note: "Стратегия на реальном проекте", content: "## Что вы увидите\nКак я фиксирую текущую точку, цель, продукт и основную гипотезу продвижения. После выпуска вы повторяете этот этап на своём проекте и сохраняете свою точку А." },
-      { id: "reality-2", title: "Сборка контент-команды", note: "Каких агентов создаю первой", content: "## Что вы увидите\nКак я выбираю первые роли в AI-команде, какие знания передаю агентам и как проверяю, что они понимают мой продукт и стиль." },
-      { id: "reality-3", title: "Форматы и нейропроизводство", note: "Как выбираю рабочую связку", content: "## Что вы увидите\nКак я выбираю формат блога, готовлю исходники и связываю сценарий, визуал и монтаж в один понятный процесс." },
-      { id: "reality-4", title: "Контент-пайплайн и тест гипотез", note: "Что проверяю до масштабирования", content: "## Что вы увидите\nКак одна идея проходит путь до публикации, что я проверяю на первых материалах и какие выводы сохраняю для следующей серии." },
-      { id: "reality-5", title: "Упаковка, прогрев и воронка", note: "Как контент приводит к продукту", content: "## Что вы увидите\nКак я связываю публикацию, целевое действие, лид-магнит и продукт, чтобы контент приводил человека к следующему шагу." },
-      { id: "reality-6", title: "Масштабирование и корректировка", note: "Что меняю после первых данных", content: "## Что вы увидите\nКак я анализирую результаты, выбираю дополнительную площадку и меняю систему после реального теста, а не по ощущениям." },
-    ],
-  },
 ];
 
-const filters = ["Все", "Старт", "Контент", "Reels", "Маркетинг", "Масштаб", "Реалити"];
+// Модуль 6 «Реалити» полностью убран из пути ученика по прямому решению
+// Натали (student-path-plan.md, версия 76) — не тизерится студенту ни в
+// каком виде, ни как готовый, ни как «скоро появится».
+const moduleIcons: Record<number, string> = { 0: "🔑", 1: "🧠", 2: "✍️", 3: "🎬", 4: "💰", 5: "📈" };
+
+const valuePropSlides = [
+  "🤖 Агенты пишут в вашем голосе — не обезличенным ИИ-текстом",
+  "🎬 Один Reels превращается в статью, сторис и пост для Threads",
+  "🔁 Настроили агента один раз — дальше он работает на вас",
+  "📈 Система растёт вместе с вами: от первого поста до масштаба",
+];
 
 // Ссылки на оплату в Tribute — задаются в переменных окружения на Vercel,
 // т.к. это реальные платёжные ссылки, которые появятся после того, как
@@ -228,9 +227,9 @@ function BrandMark() {
 
 export default function Home() {
   const [firstName, setFirstName] = useState("Наталья");
-  const [filter, setFilter] = useState("Все");
   const [hasAccess, setHasAccess] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [activePreview, setActivePreview] = useState<Module | null>(null);
   const [activeModule, setActiveModule] = useState<Module | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [activeResource, setActiveResource] = useState<Lesson | null>(null);
@@ -264,10 +263,6 @@ export default function Home() {
 
   const isLocked = (module: Module) => module.id !== FREE_MODULE_ID && !hasAccess;
 
-  const visibleModules = useMemo(
-    () => modules.filter((item) => filter === "Все" || item.category === filter),
-    [filter]
-  );
   const activeLessonIndex = activeModule && activeLesson ? activeModule.lessons.findIndex((item) => item.id === activeLesson.id) : -1;
   const nextLesson = activeModule && activeLessonIndex >= 0 ? activeModule.lessons[activeLessonIndex + 1] : undefined;
   const resources = useMemo(() => toLessons(resourceContent), []);
@@ -276,7 +271,15 @@ export default function Home() {
     ...resources.map(({ id, title, sourceUrl }) => ({ id, title, sourceUrl })),
   ], [resources]);
 
-  const openModule = (module: Module) => {
+  // Каждый модуль сначала открывает бесплатную страницу-обзор (боли аудитории,
+  // кому подходит, что внутри, бесплатная полезность) — см. app/components/
+  // ModulePreview.tsx и student-path-plan.md, версии 79-81. Только кнопка
+  // «Начать модуль N» на этой странице ведёт дальше — к урокам (модуль 0)
+  // или к экрану подписки (модули 1-5), если доступа ещё нет.
+  const openPreview = (module: Module) => { setActivePreview(module); };
+  const closePreview = () => { setActivePreview(null); };
+  const startModule = (module: Module) => {
+    setActivePreview(null);
     if (isLocked(module)) { setShowPaywall(true); return; }
     setActiveModule(module); setActiveLesson(null); setActiveResource(null);
   };
@@ -306,7 +309,7 @@ export default function Home() {
               <span className="hero-label">ВАША AI-КОМАНДА</span>
               <h2>От идеи до готового контента в одной системе</h2>
               <p>Начните с настройки студии и двигайтесь по модулям в своём темпе.</p>
-              <button onClick={() => openModule(modules[0])}>Начать обучение <span>→</span></button>
+              <button onClick={() => openPreview(modules[0])}>Начать обучение <span>→</span></button>
             </div>
             <div className="hero-visual" aria-hidden="true">
               <div className="orbit orbit-a"><span>AI</span></div>
@@ -322,29 +325,31 @@ export default function Home() {
             <div><strong>{modules.reduce((sum, item) => sum + item.lessons.length, 0)}</strong><span>материалов</span></div>
             <div><strong>1</strong><span>готовая система</span></div>
           </section>
+          <div className="value-carousel" aria-hidden="true">
+            {valuePropSlides.map((text) => <div className="slide" key={text}>{text}</div>)}
+          </div>
           <section className="packages-section">
             <div className="packages-title"><div><p>КАК ЭТО УСТРОЕНО</p><h2>Начните бесплатно с Модуля 0</h2></div></div>
             <p className="store-fineprint">Модуль 0 — настройка сервисов и первый рабочий агент — открыт для всех бесплатно, без подписки. Модули 1–5 открываются по подписке, когда вы решите продолжить.</p>
             <div className="personal-service"><span>ЛИЧНОЕ ВНЕДРЕНИЕ</span><p>Дополнительная услуга: вместе собираем систему под ваш проект и доводим её до рабочего результата.</p><button disabled title="Отдельная услуга — страница появится позже, пока пишите в личные сообщения">Узнать подробнее</button></div>
           </section>
-          <nav className="filters" aria-label="Фильтр модулей">
-            {filters.map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}
-          </nav>
           <section className="catalog-head">
-            <div><p>ПРОГРАММА</p><h2>{filter === "Все" ? "Все модули" : filter}</h2></div><span>{visibleModules.length}</span>
+            <div><p>ПРОГРАММА</p><h2>Что внутри</h2></div><span>{modules.length}</span>
           </section>
-          <section className="module-grid">
-            {visibleModules.map((module) => (
-              <button className={`module-card ${module.tone}`} key={module.id} onClick={() => openModule(module)}>
-                <div className="module-art"><span className="module-icon">{module.icon}</span><span className="module-number">0{module.id}</span></div>
-                <div className="module-content">
-                  <div className="module-meta"><span>{module.eyebrow}</span><span>{module.duration}</span></div>
-                  <h3>{module.title}</h3><p>{module.description}</p>
-                  <div className="module-result">{isLocked(module) ? <><span>🔒</span>По подписке</> : <><span>✓</span>{module.result}</>}</div>
-                </div>
+          <div className="store-modules">
+            {modules.map((module) => (
+              <button className="store-module" key={module.id} onClick={() => openPreview(module)}>
+                <span className={`ic ${module.tone}`}>{moduleIcons[module.id]}</span>
+                <span className="body"><b>{module.eyebrow} · {module.title}</b><span>{module.description}</span></span>
+                <span className="arrow">›</span>
               </button>
             ))}
-          </section>
+          </div>
+          <div className="closing-cta">
+            <h3>Хватит откладывать свой контент-завод</h3>
+            <p>Модуль 0 открыт для всех бесплатно — установите рабочего агента и проверьте его на реальной задаче уже сегодня, а дальше решите, продолжать ли по подписке.</p>
+            <button onClick={() => openPreview(modules[0])}>Начать обучение <span>→</span></button>
+          </div>
         </> : (
           <section className="learning-page">
             <p className="section-kicker">МОЁ ОБУЧЕНИЕ</p><h1>Продолжить обучение</h1>
@@ -356,7 +361,7 @@ export default function Home() {
             <h2>Ваш маршрут</h2>
             <div className="route-list">
               {modules.map((module, index) => (
-                <button key={module.id} onClick={() => openModule(module)}>
+                <button key={module.id} onClick={() => openPreview(module)}>
                   <span className={`route-index ${module.tone}`}>{isLocked(module) ? "🔒" : index + 1}</span>
                   <span><strong>{module.title}</strong><small>{isLocked(module) ? "По подписке" : module.duration}</small></span><b>›</b>
                 </button>
@@ -370,6 +375,21 @@ export default function Home() {
           <button className={tab === "learning" ? "active" : ""} onClick={() => setTab("learning")}><span className="nav-icon">◉</span><span>Обучение</span></button>
         </nav>
       </div>
+
+      {activePreview && (
+        <div className="sheet-backdrop" role="presentation" onMouseDown={closePreview}>
+          <section className="lesson-sheet" role="dialog" aria-modal="true" aria-label={`${activePreview.title} — обзор`} onMouseDown={(event) => event.stopPropagation()}>
+            <div className="sheet-handle" />
+            {modulePreviews[activePreview.id] && (
+              <ModulePreview
+                content={modulePreviews[activePreview.id]}
+                onStart={() => startModule(activePreview)}
+                onClose={closePreview}
+              />
+            )}
+          </section>
+        </div>
+      )}
 
       {activeModule && (
         <div className="sheet-backdrop" role="presentation" onMouseDown={closeModule}>
