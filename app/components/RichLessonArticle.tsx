@@ -299,9 +299,22 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
       }
     }
 
+    const routeHeadings: number[] = [];
+    for (let cursor = index; cursor < blocks.length; cursor += 1) {
+      if (ROUTE_HEAD.test(blocks[cursor])) routeHeadings.push(cursor);
+    }
+    if (routeHeadings.length === 2 && routeHeadings[0] === index) {
+      const cards = routeHeadings.map((cursor) => {
+        const match = blocks[cursor].match(ROUTE_HEAD)!;
+        return { key: match[1], label: match[2].trim() };
+      });
+      result.push(<div className="route-switch-cards" key={`route-cards-${index}`}>{cards.map((card) => <div className={`route-switch-card ${card.key === cards[0].key ? "active" : ""}`} key={card.key}><b>{card.label}</b><small>Маршрут {card.key}</small></div>)}</div>);
+    }
+
     const label = blocks[index].match(/^\*\*([^*]{1,48})\*\*$/)?.[1];
     if (label && blocks[index + 1] && !/^#{2,5}\s/.test(blocks[index + 1]) && !blocks[index + 1].startsWith("```")) {
-      result.push(<div className="lesson-info-card" key={`info-${index}`}><small>{label}</small><p><InlineRich value={blocks[index + 1]} /></p></div>);
+      const icon = INFO_CARD_ICONS[label];
+      result.push(<div className="lesson-info-card" key={`info-${index}`}><div className="lesson-info-card-label">{icon && <span className="dot-ic">{icon}</span>}<small>{label}</small></div><p><InlineRich value={blocks[index + 1]} /></p></div>);
       index += 2;
       continue;
     }
@@ -312,6 +325,9 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
 
   return result;
 }
+
+const ROUTE_HEAD = /^###\s*Маршрут\s*([А-Яа-яA-Za-z])\.\s*(.+)$/;
+const INFO_CARD_ICONS: Record<string, string> = { "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯" };
 
 function renderBlock(value: string, index: number, sectionTitle: string): ReactNode {
   if (value.startsWith("```")) return <PromptDocument code={value} title={sectionTitle} key={index} />;
@@ -328,8 +344,9 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
   const bullets = lines.every((line) => /^[-*]\s/.test(line));
   if (bullets) return <ul className="rich-bullet-list" key={index}>{lines.map((line) => <li key={line}><InlineRich value={line.replace(/^[-*]\s/, "")} /></li>)}</ul>;
 
-  const callout = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило)/i.test(value) || value.includes("⚠️");
-  return <p className={callout ? "rich-callout" : "rich-paragraph"} key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
+  const isWarning = value.includes("⚠️");
+  const callout = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило)/i.test(value) || isWarning;
+  return <p className={callout ? `rich-callout${isWarning ? " amber" : ""}` : "rich-paragraph"} key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}</p>;
 }
 
 export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true }: Props) {

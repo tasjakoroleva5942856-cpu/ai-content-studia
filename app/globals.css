@@ -346,12 +346,25 @@ button { font:inherit; }
 .rich-paragraph { margin:0 0 17px; color:#716d75; font-size:15px; font-weight:575; line-height:1.62; letter-spacing:-.01em; }.rich-paragraph:last-child { margin-bottom:0; }.rich-paragraph strong { color:#28242c; font-weight:850; }.rich-paragraph a { color:#1677ff; font-weight:800; }
 .rich-paragraph code,.rich-callout code { padding:2px 6px; border-radius:7px; background:#efedf2; color:#2a2530; font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; }
 .rich-callout { position:relative; margin:15px 0; padding:17px 17px 17px 49px; border-radius:19px; background:#f1edff; color:#5c536b; font-size:14px; font-weight:620; line-height:1.55; }.rich-callout::before { content:"✓"; position:absolute; left:15px; top:16px; width:24px; height:24px; display:grid; place-items:center; border-radius:8px; background:#7658e8; color:#fff; font-size:11px; font-weight:900; }
+.rich-callout.amber { background:#faeaf3; color:#7d3560; }.rich-callout.amber::before { content:"⚠"; background:#a8447a; border-radius:50%; }
 .rich-bullet-list { margin:12px 0 19px; padding:15px 18px 15px 38px; border-radius:19px; background:#f5f4f6; }.rich-bullet-list li { margin:8px 0; padding-left:3px; color:#5f5a64; font-size:14px; font-weight:610; line-height:1.5; }.rich-bullet-list li::marker { color:#7657ff; }
-.real-step-list { counter-reset:rich-step; display:grid; gap:8px; margin:13px 0 20px; padding:0; list-style:none; }
-.real-step-list li { counter-increment:rich-step; display:grid; grid-template-columns:36px 1fr; gap:11px; align-items:start; padding:12px; border-radius:17px; background:#f4f3f5; color:#4e4953; font-size:14px; font-weight:640; line-height:1.5; }.real-step-list li::before { content:counter(rich-step); width:36px; height:36px; display:grid; place-items:center; border-radius:11px; background:#fff; color:#27232b; font-size:11px; font-weight:900; box-shadow:0 3px 10px rgba(34,26,44,.06); }
+.real-step-list { counter-reset:rich-step; display:flex; flex-direction:column; gap:10px; margin:13px 0 20px; padding:0; list-style:none; }
+.real-step-list li { counter-increment:rich-step; display:flex; gap:12px; }
+.real-step-list li::before { content:counter(rich-step); flex:0 0 auto; width:28px; height:28px; margin-top:1px; display:grid; place-items:center; border-radius:50%; border:1.5px solid #28242c; color:#28242c; font-size:12px; font-weight:800; }
+.real-step-list li span { flex:1; padding-bottom:10px; border-bottom:1px solid #eae7ee; color:#4e4953; font-size:14px; font-weight:610; line-height:1.55; }
+.real-step-list li:last-child span { border-bottom:0; padding-bottom:0; }
 .rich-checklist { display:grid; gap:7px; margin:12px 0; padding:10px; border-radius:20px; background:#f3f2f4; }.rich-checklist label { display:grid; grid-template-columns:21px 1fr; gap:10px; align-items:center; padding:11px; border-radius:14px; background:#fff; color:#514c56; font-size:13px; font-weight:640; line-height:1.4; cursor:pointer; }.rich-checklist input { width:19px; height:19px; margin:0; accent-color:#7657ff; }
 .lesson-info-card { display:grid; grid-template-columns:120px 1fr; gap:15px; align-items:start; margin:8px 0; padding:15px; border-radius:17px; background:#f5f4f6; }
+.lesson-info-card-label { display:flex; align-items:center; gap:8px; }
+.lesson-info-card-label .dot-ic { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:11px; background:#7658e8; color:#fff; flex:0 0 auto; }
 .lesson-info-card small { padding-top:2px; color:#8b8590; font-size:9px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }.lesson-info-card p { margin:0; color:#4e4953; font-size:13px; font-weight:650; line-height:1.48; }
+.route-switch-cards { display:flex; gap:8px; margin:0 0 14px; }
+.route-switch-card { flex:1; padding:12px 13px; border:1.5px solid #eae7ee; border-radius:14px; background:#fff; }
+.route-switch-card b { display:block; font-size:13px; font-weight:800; color:#28242c; margin-bottom:2px; }
+.route-switch-card small { font-size:10.5px; font-weight:650; color:#8b8590; }
+.route-switch-card.active { border-color:#d7cffb; background:#d7cffb; }
+.route-switch-card.active b { color:#4c3b96; }
+.route-switch-card.active small { color:#4c3b96; }
 .rich-table { overflow:hidden; margin:14px 0 22px; border:1px solid #e7e3e9; border-radius:21px; background:#f4f3f5; }
 .rich-table-head { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:1px; padding:0 13px; background:#29252d; color:#fff; }
 .rich-table-head span { min-width:0; padding:12px 9px; color:rgba(255,255,255,.67); font-size:8px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
