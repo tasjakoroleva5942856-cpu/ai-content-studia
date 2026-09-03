@@ -421,7 +421,7 @@ button { font:inherit; }
 .closing-cta button:active { transform:scale(.96); }
 
 /* ===== Открытая страница-продажа модуля (см. app/components/ModulePreview.tsx) ===== */
-.module-preview { --preview-accent:var(--accent); --preview-accent-soft:#eee9ff; padding:6px 2px 0; }
+.module-preview { --preview-accent:var(--accent); --preview-accent-soft:#eee9ff; padding:6px 22px 0; }
 .module-preview.mod1 { --preview-accent:var(--m1-accent); --preview-accent-soft:var(--m1-accent-soft); }
 .module-preview.mod2 { --preview-accent:var(--m2-accent); --preview-accent-soft:var(--m2-accent-soft); }
 .module-preview.mod3 { --preview-accent:var(--m3-accent); --preview-accent-soft:var(--m3-accent-soft); }
