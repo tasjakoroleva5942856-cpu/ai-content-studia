@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import SubscriptionLesson from "./components/SubscriptionLesson";
 import RichLessonArticle from "./components/RichLessonArticle";
 import ModulePreview from "./components/ModulePreview";
+import ImplementationPage from "./components/ImplementationPage";
 import { module0Content, type CourseLessonContent } from "./content/module-0";
 import { module1Content } from "./content/module-1";
 import { module2Content } from "./content/module-2";
@@ -229,6 +230,7 @@ export default function Home() {
   const [firstName, setFirstName] = useState("Наталья");
   const [hasAccess, setHasAccess] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showImplementation, setShowImplementation] = useState(false);
   const [activePreview, setActivePreview] = useState<Module | null>(null);
   const [activeModule, setActiveModule] = useState<Module | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
@@ -344,7 +346,7 @@ export default function Home() {
           <section className="packages-section">
             <div className="packages-title"><div><p>КАК ЭТО УСТРОЕНО</p><h2>Начните бесплатно с Модуля 0</h2></div></div>
             <p className="store-fineprint">Модуль 0 — настройка сервисов и первый рабочий агент — открыт для всех бесплатно, без подписки. Модули 1–5 открываются по подписке, когда вы решите продолжить.</p>
-            <div className="personal-service"><span>ЛИЧНОЕ ВНЕДРЕНИЕ</span><p>Дополнительная услуга: вместе собираем систему под ваш проект и доводим её до рабочего результата.</p><button disabled title="Отдельная услуга — страница появится позже, пока пишите в личные сообщения">Узнать подробнее</button></div>
+            <div className="personal-service"><span>ЛИЧНОЕ ВНЕДРЕНИЕ</span><p>Дополнительная услуга: вместе собираем систему под ваш проект и доводим её до рабочего результата.</p><button onClick={() => setShowImplementation(true)}>Узнать подробнее</button></div>
           </section>
           <section className="catalog-head">
             <div><p>ПРОГРАММА</p><h2>Что внутри</h2></div><span>{modules.length}</span>
@@ -445,6 +447,15 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </section>
+        </div>
+      )}
+
+      {showImplementation && (
+        <div className="sheet-backdrop" role="presentation" onMouseDown={() => setShowImplementation(false)}>
+          <section className="lesson-sheet" role="dialog" aria-modal="true" aria-label="Личное внедрение" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="sheet-handle" />
+            <ImplementationPage onClose={() => setShowImplementation(false)} />
           </section>
         </div>
       )}

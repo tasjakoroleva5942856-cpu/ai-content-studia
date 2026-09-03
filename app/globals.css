@@ -453,7 +453,7 @@ button { font:inherit; }
 .module-preview .callout.amber { background:#faeaf3; color:#7d3560; }
 .module-preview .callout.accent-callout { background:var(--preview-accent-soft); color:var(--ink); }
 .module-preview .nextbar { position:sticky; bottom:0; margin-top:24px; padding-top:14px; background:linear-gradient(0deg,#fff 60%,transparent); }
-.module-preview .nextbar button { width:100%; border:0; padding:15px; border-radius:14px; background:var(--preview-accent); color:#fff; font:inherit; font-size:13.5px; font-weight:800; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+.module-preview .nextbar button, .module-preview .nextbar a.nextbar-link { width:100%; border:0; padding:15px; border-radius:14px; background:var(--preview-accent); color:#fff; font:inherit; font-size:13.5px; font-weight:800; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; }
 .module-preview .nextbar small { display:block; text-align:center; margin-top:8px; font-size:10.5px; color:var(--muted); }
 
 @keyframes fade-in { from { opacity:0; } } @keyframes slide-up { from { transform:translateY(40px); opacity:.5; } }
