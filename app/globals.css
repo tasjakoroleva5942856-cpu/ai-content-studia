@@ -348,6 +348,7 @@ button { font:inherit; }
 .rich-callout { position:relative; margin:15px 0; padding:17px 17px 17px 49px; border-radius:19px; background:#f1edff; color:#5c536b; font-size:14px; font-weight:620; line-height:1.55; }.rich-callout::before { content:"✓"; position:absolute; left:15px; top:16px; width:24px; height:24px; display:grid; place-items:center; border-radius:8px; background:#7658e8; color:#fff; font-size:11px; font-weight:900; }
 .rich-callout.amber { background:#faeaf3; color:#7d3560; }.rich-callout.amber::before { content:"⚠"; background:#a8447a; border-radius:50%; }
 .rich-bullet-list { margin:12px 0 19px; padding:15px 18px 15px 38px; border-radius:19px; background:#f5f4f6; }.rich-bullet-list li { margin:8px 0; padding-left:3px; color:#5f5a64; font-size:14px; font-weight:610; line-height:1.5; }.rich-bullet-list li::marker { color:#7657ff; }
+.lesson-step-group .real-step-list { margin-top:2px; }
 .real-step-list { counter-reset:rich-step; display:flex; flex-direction:column; gap:10px; margin:13px 0 20px; padding:0; list-style:none; }
 .real-step-list li { counter-increment:rich-step; display:flex; gap:12px; }
 .real-step-list li::before { content:counter(rich-step); flex:0 0 auto; width:28px; height:28px; margin-top:1px; display:grid; place-items:center; border-radius:50%; border:1.5px solid #28242c; color:#28242c; font-size:12px; font-weight:800; }
@@ -359,7 +360,8 @@ button { font:inherit; }
 .lesson-info-card-label .dot-ic { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:11px; background:#7658e8; color:#fff; flex:0 0 auto; }
 .lesson-info-card small { padding-top:2px; color:#8b8590; font-size:9px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }.lesson-info-card p { margin:0; color:#4e4953; font-size:13px; font-weight:650; line-height:1.48; }
 .route-switch-cards { display:flex; gap:8px; margin:0 0 14px; }
-.route-switch-card { flex:1; padding:12px 13px; border:1.5px solid #eae7ee; border-radius:14px; background:#fff; }
+.route-switch-card { flex:1; padding:12px 13px; border:1.5px solid #eae7ee; border-radius:14px; background:#fff; font:inherit; text-align:left; cursor:pointer; transition:border-color .15s,background .15s; }
+.route-switch-card:hover { border-color:#d7cffb; }
 .route-switch-card b { display:block; font-size:13px; font-weight:800; color:#28242c; margin-bottom:2px; }
 .route-switch-card small { font-size:10.5px; font-weight:650; color:#8b8590; }
 .route-switch-card.active { border-color:#d7cffb; background:#d7cffb; }

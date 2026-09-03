@@ -277,6 +277,28 @@ function RichTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return <div className="rich-table"><div className="rich-table-head">{headers.map((header) => <span key={header}>{header}</span>)}</div><div className="rich-table-body">{rows.map((row, rowIndex) => <div className="rich-table-row" key={rowIndex}>{row.map((cell, cellIndex) => <div key={cellIndex}><small>{headers[cellIndex]}</small><span><InlineRich value={cell} /></span></div>)}</div>)}</div></div>;
 }
 
+type RouteInfo = { key: string; label: string; nodes: ReactNode[] };
+
+function RouteSwitcher({ routeA, routeB }: { routeA: RouteInfo; routeB: RouteInfo }) {
+  const [active, setActive] = useState(routeA.key);
+  const routes = [routeA, routeB];
+  const current = routes.find((route) => route.key === active) ?? routeA;
+
+  return <div className="route-switch">
+    <div className="route-switch-cards">{routes.map((route) => (
+      <button
+        type="button"
+        className={`route-switch-card ${route.key === active ? "active" : ""}`}
+        key={route.key}
+        onClick={() => setActive(route.key)}
+      >
+        <b>{route.label}</b><small>Маршрут {route.key}</small>
+      </button>
+    ))}</div>
+    <div className="route-switch-content">{current.nodes}</div>
+  </div>;
+}
+
 function renderBlocks(blocks: string[], sectionTitle: string) {
   const result: ReactNode[] = [];
   let index = 0;
@@ -302,11 +324,18 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
       if (ROUTE_HEAD.test(blocks[cursor])) routeHeadings.push(cursor);
     }
     if (routeHeadings.length === 2 && routeHeadings[0] === index) {
-      const cards = routeHeadings.map((cursor) => {
-        const match = blocks[cursor].match(ROUTE_HEAD)!;
-        return { key: match[1], label: match[2].trim() };
-      });
-      result.push(<div className="route-switch-cards" key={`route-cards-${index}`}>{cards.map((card) => <div className={`route-switch-card ${card.key === cards[0].key ? "active" : ""}`} key={card.key}><b>{card.label}</b><small>Маршрут {card.key}</small></div>)}</div>);
+      const [headingA, headingB] = routeHeadings;
+      let contentBEnd = blocks.length;
+      for (let cursor = headingB + 1; cursor < blocks.length; cursor += 1) {
+        if (/^#{1,5}\s/.test(blocks[cursor])) { contentBEnd = cursor; break; }
+      }
+      const matchA = blocks[headingA].match(ROUTE_HEAD)!;
+      const matchB = blocks[headingB].match(ROUTE_HEAD)!;
+      const routeA = { key: matchA[1], label: matchA[2].trim(), nodes: renderBlocks(blocks.slice(headingA + 1, headingB), sectionTitle) };
+      const routeB = { key: matchB[1], label: matchB[2].trim(), nodes: renderBlocks(blocks.slice(headingB + 1, contentBEnd), sectionTitle) };
+      result.push(<RouteSwitcher routeA={routeA} routeB={routeB} key={`route-switch-${index}`} />);
+      index = contentBEnd;
+      continue;
     }
 
     const label = blocks[index].match(/^\*\*([^*]{1,48})\*\*$/)?.[1];
@@ -325,7 +354,7 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
 }
 
 const ROUTE_HEAD = /^###\s*Маршрут\s*([А-Яа-яA-Za-z])\.\s*(.+)$/;
-const INFO_CARD_ICONS: Record<string, string> = { "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯" };
+const INFO_CARD_ICONS: Record<string, string> = { "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯", "Сохранить на компьютер": "💻", "Загрузить в базу знаний": "📥" };
 
 function renderBlock(value: string, index: number, sectionTitle: string): ReactNode {
   if (value.startsWith("```")) return <PromptDocument code={value} title={sectionTitle} key={index} />;
@@ -338,6 +367,26 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
 
   const numbered = lines.every((line) => /^\d+[.)]\s/.test(line));
   if (numbered) return <ol className="real-step-list" key={index}>{lines.map((line) => <li key={line}><span><InlineRich value={line.replace(/^\d+[.)]\s/, "")} /></span></li>)}</ol>;
+
+  // A bold-lead (or plain) intro line glued by a single "\n" to a numbered mini-list
+  // that follows it in the same block (no blank line between them in the source).
+  // Split it into its own intro paragraph/callout plus a real ordered list instead of
+  // rendering the whole thing as one cramped paragraph.
+  const firstNumberedIndex = lines.findIndex((line) => /^\d+[.)]\s/.test(line));
+  if (
+    firstNumberedIndex > 0 &&
+    lines.slice(firstNumberedIndex).every((line) => /^\d+[.)]\s/.test(line))
+  ) {
+    const introLines = lines.slice(0, firstNumberedIndex);
+    const stepLines = lines.slice(firstNumberedIndex);
+    const introValue = introLines.join("\n");
+    const introIsWarning = introValue.includes("⚠️");
+    const introIsCallout = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило)/i.test(introValue) || introIsWarning;
+    return <div className="lesson-step-group" key={index}>
+      <p className={introIsCallout ? `rich-callout${introIsWarning ? " amber" : ""}` : "rich-paragraph"}>{introLines.map((line, lineIndex) => <span key={lineIndex}><InlineRich value={line} />{lineIndex < introLines.length - 1 && <br />}</span>)}</p>
+      <ol className="real-step-list">{stepLines.map((line) => <li key={line}><span><InlineRich value={line.replace(/^\d+[.)]\s/, "")} /></span></li>)}</ol>
+    </div>;
+  }
 
   const bullets = lines.every((line) => /^[-*]\s/.test(line));
   if (bullets) return <ul className="rich-bullet-list" key={index}>{lines.map((line) => <li key={line}><InlineRich value={line.replace(/^[-*]\s/, "")} /></li>)}</ul>;
