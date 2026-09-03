@@ -49,6 +49,18 @@ function contentWithoutNavigation(content: string) {
   return content.split(/\n---\n## (?:Продолжить обучение|Куда дальше)/)[0].trim();
 }
 
+// Mockup's `.path-cta` (e.g. screens p0/m1-1/m2-0 etc): a solid module-tinted
+// callout with the lesson's transition note, sitting right before the
+// "next lesson" button — authored in module-N.ts as the LAST block of a
+// lesson, wrapped in a lone `---` line on each side (the same convention the
+// content already uses to separate this from `\n---\n## Продолжить обучение`
+// right after it). Split it off before tokenizing the rest of the body.
+function splitPathCta(content: string): { body: string; pathCta: string | null } {
+  const match = content.match(/\n---\n([^]+?)\n---\s*$/);
+  if (!match) return { body: content, pathCta: null };
+  return { body: content.slice(0, match.index).trim(), pathCta: match[1].trim() };
+}
+
 function notionPageId(url: string) {
   return url.match(/[a-f0-9]{32}/i)?.[0]?.toLowerCase();
 }
@@ -466,7 +478,7 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
       }
       result.push(<div className="info-rows" key={`info-${index}`}>{rows.map((row) => (
         <div className="row" key={row.label}>
-          <div className="head"><span className="name">{INFO_CARD_ICONS[row.label] && <span className="dot-ic">{INFO_CARD_ICONS[row.label]}</span>}<b>{row.label}</b></span></div>
+          <div className="head"><span className="name"><span className="dot-ic">{INFO_CARD_ICONS[row.label] || DEFAULT_INFO_ICON}</span><b>{row.label}</b></span></div>
           <div className="sub"><InlineRich value={row.content} /></div>
         </div>
       ))}</div>);
@@ -528,7 +540,28 @@ function Steps({ lines, id }: { lines: string[]; id: string }) {
 }
 
 const ROUTE_HEAD = /^###\s*Маршрут\s*([А-Яа-яA-Za-z])\.\s*(.+)$/;
-const INFO_CARD_ICONS: Record<string, string> = { "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯", "Сохранить на компьютер": "💻", "Загрузить в базу знаний": "📥" };
+
+// Label → icon dictionary, built from every `.info-rows .row .head` label the
+// design mockup actually uses (lessonredesignmockup.html, `dot-ic` spans inside
+// `.head`/`.name` — excludes the numbered-folder and chat-accordion `dot-ic`
+// uses, which carry numbers/letters instead of a semantic icon). Where the
+// mockup uses more than one icon for the same label across screens, the most
+// frequent one is kept here. `DEFAULT_INFO_ICON` guarantees every row still
+// gets an icon even for a label not in this dictionary — the mockup never
+// shows a label-less/icon-less `.row`, so the app must not either.
+const INFO_CARD_ICONS: Record<string, string> = {
+  "Время": "⏱", "Подготовить": "🗂", "Действие": "⚡", "Результат": "🎯",
+  "Сохранить на компьютер": "💻", "Загрузить в базу знаний": "📥",
+  "Перед началом": "🗂", "Что сделать": "⚡", "Загрузить": "📚",
+  "Источники": "🔎", "Первый тест": "🧪", "Первый результат": "✅",
+  "Критерий качества": "✅", "Когда возвращаться": "🔁", "Можно пропустить": "⏭️",
+  "Опционально": "🔌", "Дополнительно": "🔌", "Сначала решить": "🧭",
+  "Когда выбирать этот путь": "🧭", "Что здесь не нужно": "🚫", "Технически": "🎥",
+  "По подаче": "🗣", "После проверки": "📈", "Чем отличается от AI-студии": "⚖️",
+  "Рекомендуется загрузить": "📤", "Загрузить в базу знаний проекта": "📤",
+  "Проект": "📁",
+};
+const DEFAULT_INFO_ICON = "•";
 
 function renderBlock(value: string, index: number, sectionTitle: string): ReactNode {
   if (value.startsWith("```")) return <PromptCard code={value} title={sectionTitle} key={index} />;
@@ -578,11 +611,12 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
 
 export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true, moduleId }: Props) {
   const prepared = useMemo(() => contentWithoutNavigation(content), [content]);
+  const { body: bodyContent, pathCta } = useMemo(() => splitPathCta(prepared), [prepared]);
   const navigation = useMemo<NavigationContextValue>(() => {
     const lessonMap = new Map(courseLessons.map((lesson) => [notionPageId(lesson.sourceUrl || ""), lesson]));
     return { resolve: (url: string) => lessonMap.get(notionPageId(url)), open: (id: string) => { onOpenLesson(id); } };
   }, [courseLessons, onOpenLesson]);
-  const tokens = useMemo(() => tokenize(prepared), [prepared]);
+  const tokens = useMemo(() => tokenize(bodyContent), [bodyContent]);
   const firstHeading = tokens.findIndex((token) => token.startsWith("## "));
   const intro = firstHeading === -1 ? tokens : tokens.slice(0, firstHeading);
   const rest = firstHeading === -1 ? [] : tokens.slice(firstHeading);
@@ -630,6 +664,8 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
       <div className="instruction-sections">
         {sections.map((section, sectionIndex) => renderSection(section, sectionIndex))}
       </div>
+
+      {pathCta && <div className="path-cta"><InlineRich value={pathCta} /></div>}
 
     </article></LessonNavigationContext.Provider>
   );
