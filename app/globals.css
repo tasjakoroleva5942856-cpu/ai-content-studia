@@ -485,7 +485,13 @@ button { font:inherit; }
 .lesson-footer { margin-top:32px; padding-top:25px; border-top:1px solid #e6e3e8; }
 .lesson-footer>div { margin-bottom:20px; }.lesson-footer>div strong,.lesson-footer>div span { display:block; }.lesson-footer>div strong { font-size:16px; }.lesson-footer>div span { margin-top:5px; color:#858089; font-size:11px; font-weight:650; }
 .all-lessons-button,.complete-button { width:100%; border:0; border-radius:18px; padding:17px; font-size:14px; font-weight:850; cursor:pointer; }
-.all-lessons-button { background:#f0eff1; color:#252229; }.complete-button { margin-top:10px; background:var(--ink); color:#fff; }
+.all-lessons-button { background:#f0eff1; color:#252229; }
+.complete-button { margin-top:10px; background:#d3edfd; color:#1a6fa0; }
+.complete-button.mod1 { background:#d7cffb; color:#4c3b96; }
+.complete-button.mod2 { background:#f7cbc4; color:#a83f2e; }
+.complete-button.mod3 { background:#dbeda7; color:#5e7a1e; }
+.complete-button.mod4 { background:#f9ddc1; color:#96591c; }
+.complete-button.mod5 { background:#cbddfc; color:#3054a8; }
 .resource-footer .complete-button { margin-top:0; }
 /* ===== Главная — список модулей (ведут на открытые страницы-продажи) и закрывающий призыв ===== */
 .store-modules { display:flex; flex-direction:column; gap:8px; }

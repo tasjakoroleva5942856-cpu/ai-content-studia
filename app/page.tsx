@@ -109,6 +109,8 @@ const modules: Module[] = [
   },
 ];
 
+const moduleToneClass: Record<number, string> = { 0: "", 1: "mod1", 2: "mod2", 3: "mod3", 4: "mod4", 5: "mod5" };
+
 // Модуль 6 «Реалити» полностью убран из пути ученика по прямому решению
 // Натали (student-path-plan.md, версия 76) — не тизерится студенту ни в
 // каком виде, ни как готовый, ни как «скоро появится».
@@ -435,11 +437,11 @@ export default function Home() {
                   ? <SubscriptionLesson />
                   : (activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} moduleId={activeModule.id} />}
                 {activeResource ? <footer className="lesson-footer resource-footer">
-                  <button className="complete-button" onClick={() => setActiveResource(null)}>Вернуться к уроку</button>
+                  <button className={`complete-button ${moduleToneClass[activeModule.id] || ""}`} onClick={() => setActiveResource(null)}>Вернуться к уроку</button>
                 </footer> : <footer className="lesson-footer">
                   <div><strong>Урок {activeLessonIndex + 1} из {activeModule.lessons.length}</strong><span>{activeModule.eyebrow} · {activeModule.title}</span></div>
                   <button className="all-lessons-button" onClick={() => setActiveLesson(null)}>Все уроки</button>
-                  <button className="complete-button" onClick={() => { setActiveResource(null); nextLesson ? setActiveLesson(nextLesson) : setActiveLesson(null); }}>
+                  <button className={`complete-button ${moduleToneClass[activeModule.id] || ""}`} onClick={() => { setActiveResource(null); nextLesson ? setActiveLesson(nextLesson) : setActiveLesson(null); }}>
                     {nextLesson ? `Дальше: ${plainText(nextLesson.title).replace(/^Урок\s*[\w.]+\s*/i, "")}` : "Завершить модуль"}
                   </button>
                 </footer>}
