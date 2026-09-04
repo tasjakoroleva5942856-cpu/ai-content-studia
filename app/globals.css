@@ -391,8 +391,10 @@ button { font:inherit; }
 .rich-lesson-article .code-card button { border:0; padding:8px 14px; border-radius:9px; background:var(--la-accent); color:#fff; font:inherit; font-size:12px; font-weight:750; cursor:pointer; }
 .rich-lesson-article .code-card button.copied { background:#2fa06a; }
 
-/* -- prompt-card (verbatim mockup .prompt-card, replaces the old prompt-document) -- */
-.rich-lesson-article .prompt-card { border:1px solid var(--la-line); border-radius:var(--la-radius-md); padding:14px; margin-bottom:10px; }
+/* -- prompt-card (verbatim mockup .prompt-card border/radius; background is our own
+   addition — a translucent module-tinted wash so the "ready text to paste" card reads
+   as belonging to its module, per direct request, not from the mockup) -- */
+.rich-lesson-article .prompt-card { background:color-mix(in srgb, var(--la-accent) 8%, transparent); border:1px solid var(--la-line); border-radius:var(--la-radius-md); padding:14px; margin-bottom:10px; }
 .rich-lesson-article .prompt-card .ph { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; }
 .rich-lesson-article .prompt-card .ph b { font-size:13px; }
 .rich-lesson-article .prompt-card .ph span { flex:0 0 auto; font-size:10.5px; padding:3px 8px; border-radius:20px; background:var(--la-accent-soft); color:var(--la-accent); font-weight:700; }
