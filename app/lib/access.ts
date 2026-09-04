@@ -58,12 +58,21 @@ function createStore(): AccessStore {
 
 const store: AccessStore = createStore();
 
+// Оставлено на случай, если понадобится выдавать доступ вручную на N дней
+// (например, для промо). Основной путь — grantAccessUntil ниже, Tribute сам
+// присылает точную дату окончания подписки.
 export async function grantAccess(userId: number, days: number): Promise<number> {
   const existing = await store.get(userId);
   const base = existing && existing.activeUntil > Date.now() ? existing.activeUntil : Date.now();
   const activeUntil = base + days * 24 * 60 * 60 * 1000;
   await store.set(userId, { activeUntil });
   return activeUntil;
+}
+
+// Tribute присылает точную дату окончания подписки (payload.expires_at) —
+// записываем её как есть, без дополнительных расчётов дней.
+export async function grantAccessUntil(userId: number, activeUntil: number): Promise<void> {
+  await store.set(userId, { activeUntil });
 }
 
 export async function hasActiveAccess(userId: number): Promise<boolean> {

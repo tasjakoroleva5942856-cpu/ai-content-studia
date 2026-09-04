@@ -116,8 +116,10 @@ const valuePropSlides = [
 // Ссылки на оплату в Tribute — задаются в переменных окружения на Vercel,
 // т.к. это реальные платёжные ссылки, которые появятся после того, как
 // в @tribute будут созданы два товара («1 месяц» и «3 месяца»).
-const TRIBUTE_LINK_1M = process.env.NEXT_PUBLIC_TRIBUTE_LINK_1M || "";
-const TRIBUTE_LINK_3M = process.env.NEXT_PUBLIC_TRIBUTE_LINK_3M || "";
+// Один тариф в Tribute ("AI Content Studio — доступ") с двумя периодами —
+// обе кнопки ведут на одну и ту же страницу, там пользователь сам выбирает
+// период (1 или 3 месяца) перед оплатой.
+const TRIBUTE_LINK = process.env.NEXT_PUBLIC_TRIBUTE_LINK || "";
 
 function plainText(value: string) {
   return value
@@ -477,33 +479,34 @@ export default function Home() {
               </div>
               <div className="paywall-options">
                 <div className="paywall-option">
-                  <div className="top-row"><span className="label">1 месяц</span><span className="price">3 900 ₽<span> /мес</span></span></div>
+                  <div className="top-row"><span className="label">1 месяц</span><span className="price">2 490 ₽<span> /мес</span></span></div>
                   <p className="note">Доступ на 30 дней с момента оплаты. Захотите продолжить — оформите ещё раз.</p>
                   <a
                     className="paywall-cta"
-                    href={TRIBUTE_LINK_1M || undefined}
+                    href={TRIBUTE_LINK || undefined}
                     target="_blank" rel="noreferrer"
-                    aria-disabled={!TRIBUTE_LINK_1M}
-                    onClick={(event) => { if (!TRIBUTE_LINK_1M) event.preventDefault(); }}
+                    aria-disabled={!TRIBUTE_LINK}
+                    onClick={(event) => { if (!TRIBUTE_LINK) event.preventDefault(); }}
                   >
-                    {TRIBUTE_LINK_1M ? "Оформить за 3 900 ₽" : "Скоро откроем оплату"}
+                    {TRIBUTE_LINK ? "Оформить за 2 490 ₽" : "Скоро откроем оплату"}
                   </a>
                 </div>
                 <div className="paywall-option highlight">
-                  <span className="badge">Экономия 1 800 ₽</span>
-                  <div className="top-row"><span className="label">3 месяца сразу</span><span className="price">9 900 ₽<span> за 3 мес.</span></span></div>
+                  <span className="badge">Экономия 1 570 ₽</span>
+                  <div className="top-row"><span className="label">3 месяца сразу</span><span className="price">5 900 ₽<span> за 3 мес.</span></span></div>
                   <p className="note">Фиксирует сегодняшнюю цену на 3 месяца вперёд, даже если стоимость подписки успеет вырасти.</p>
                   <a
                     className="paywall-cta"
-                    href={TRIBUTE_LINK_3M || undefined}
+                    href={TRIBUTE_LINK || undefined}
                     target="_blank" rel="noreferrer"
-                    aria-disabled={!TRIBUTE_LINK_3M}
-                    onClick={(event) => { if (!TRIBUTE_LINK_3M) event.preventDefault(); }}
+                    aria-disabled={!TRIBUTE_LINK}
+                    onClick={(event) => { if (!TRIBUTE_LINK) event.preventDefault(); }}
                   >
-                    {TRIBUTE_LINK_3M ? "Оформить за 9 900 ₽" : "Скоро откроем оплату"}
+                    {TRIBUTE_LINK ? "Оформить за 5 900 ₽" : "Скоро откроем оплату"}
                   </a>
                 </div>
               </div>
+              <p className="store-fineprint" style={{ marginTop: "-8px" }}>Обе кнопки открывают одну страницу оплаты — нужный период (1 или 3 месяца) выбирается уже там.</p>
               <p className="store-fineprint">Оплата проходит через Tribute. После оплаты доступ откроется автоматически в течение минуты — если модуль всё ещё закрыт, откройте студию заново.</p>
             </div>
           </section>
