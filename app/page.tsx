@@ -479,7 +479,7 @@ export default function Home() {
               </div>
               <div className="paywall-options">
                 <div className="paywall-option">
-                  <div className="top-row"><span className="label">1 месяц</span><span className="price">2 490 ₽<span> /мес</span></span></div>
+                  <div className="top-row"><span className="label">1 месяц</span><span className="price">3 900 ₽<span> /мес</span></span></div>
                   <p className="note">Доступ на 30 дней с момента оплаты. Захотите продолжить — оформите ещё раз.</p>
                   <a
                     className="paywall-cta"
@@ -488,12 +488,12 @@ export default function Home() {
                     aria-disabled={!TRIBUTE_LINK}
                     onClick={(event) => { if (!TRIBUTE_LINK) event.preventDefault(); }}
                   >
-                    {TRIBUTE_LINK ? "Оформить за 2 490 ₽" : "Скоро откроем оплату"}
+                    {TRIBUTE_LINK ? "Оформить за 3 900 ₽" : "Скоро откроем оплату"}
                   </a>
                 </div>
                 <div className="paywall-option highlight">
-                  <span className="badge">Экономия 1 570 ₽</span>
-                  <div className="top-row"><span className="label">3 месяца сразу</span><span className="price">5 900 ₽<span> за 3 мес.</span></span></div>
+                  <span className="badge">Экономия 1 800 ₽</span>
+                  <div className="top-row"><span className="label">3 месяца сразу</span><span className="price">9 900 ₽<span> за 3 мес.</span></span></div>
                   <p className="note">Фиксирует сегодняшнюю цену на 3 месяца вперёд, даже если стоимость подписки успеет вырасти.</p>
                   <a
                     className="paywall-cta"
@@ -502,7 +502,7 @@ export default function Home() {
                     aria-disabled={!TRIBUTE_LINK}
                     onClick={(event) => { if (!TRIBUTE_LINK) event.preventDefault(); }}
                   >
-                    {TRIBUTE_LINK ? "Оформить за 5 900 ₽" : "Скоро откроем оплату"}
+                    {TRIBUTE_LINK ? "Оформить за 9 900 ₽" : "Скоро откроем оплату"}
                   </a>
                 </div>
               </div>
