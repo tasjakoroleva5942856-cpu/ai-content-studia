@@ -500,6 +500,28 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
       continue;
     }
 
+    // A RUN of 2+ consecutive standalone "**Short lead** — text." blocks (each its
+    // own block, separated by blank lines) is the mockup's "sequence of result
+    // callouts" pattern (e.g. lesson 3's "## Результат": "Когда линейка собрана —
+    // ...", "Файлы в базе знаний — ...", "Готовую линейку — ..." — three separate
+    // .callout boxes, not one paragraph each). Scoped to a RUN (not a single
+    // isolated bold-lead sentence) so long-form instructional leads that happen to
+    // start with "**Label:**" (e.g. "Как установить: откройте репозиторий...")
+    // don't get boxed too — those appear alone, not back-to-back with siblings of
+    // the same shape.
+    const BOLD_LEAD_DASH = /^\*\*[^*]{2,60}\*\*\s*[—:]/;
+    if (BOLD_LEAD_DASH.test(blocks[index]) && !isCallout(blocks[index])) {
+      let cursor = index;
+      while (cursor < blocks.length && BOLD_LEAD_DASH.test(blocks[cursor]) && !blocks[cursor].startsWith("```")) cursor += 1;
+      if (cursor - index >= 2) {
+        for (let i = index; i < cursor; i += 1) {
+          result.push(<Callout tone={calloutTone(blocks[i])} lines={[blocks[i]]} id={`run-callout-${i}`} key={`run-callout-${i}`} />);
+        }
+        index = cursor;
+        continue;
+      }
+    }
+
     result.push(renderBlock(blocks[index], index, sectionTitle));
     index += 1;
   }
