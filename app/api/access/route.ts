@@ -18,5 +18,5 @@ export async function POST(request: NextRequest) {
   if (result.error === "server_not_configured") {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
-  return NextResponse.json({ active: result.active });
+  return NextResponse.json({ active: result.active, reason: result.error });
 }

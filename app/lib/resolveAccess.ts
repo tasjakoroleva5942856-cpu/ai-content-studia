@@ -1,9 +1,13 @@
 import { timingSafeEqual } from "crypto";
 import { hasActiveAccess } from "./access";
+import { hasConsent } from "./consent";
 import { verifyTelegramInitData } from "./telegramAuth";
 
 export type AccessRequest = { initData?: string; ownerKey?: string };
-export type AccessResult = { active: boolean; error?: "server_not_configured" | "missing_init_data" | "invalid_init_data" };
+export type AccessResult = {
+  active: boolean;
+  error?: "server_not_configured" | "missing_init_data" | "invalid_init_data" | "consent_required";
+};
 
 function safeStringEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
@@ -37,6 +41,13 @@ export async function resolveAccess({ initData, ownerKey }: AccessRequest): Prom
   const user = verifyTelegramInitData(initData, botToken);
   if (!user) {
     return { active: false, error: "invalid_init_data" };
+  }
+
+  // Без подтверждённого в боте согласия на обработку персональных данных
+  // доступ не открываем, даже если подписка уже оплачена — согласие должно
+  // предшествовать обработке telegram_user_id (см. app/api/telegram-webhook).
+  if (!(await hasConsent(user.id))) {
+    return { active: false, error: "consent_required" };
   }
 
   return { active: await hasActiveAccess(user.id) };

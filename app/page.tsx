@@ -88,6 +88,7 @@ const valuePropSlides = [
 // обе кнопки ведут на одну и ту же страницу, там пользователь сам выбирает
 // период (1 или 3 месяца) перед оплатой.
 const TRIBUTE_LINK = process.env.NEXT_PUBLIC_TRIBUTE_LINK || "";
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "";
 
 function plainText(value: string) {
   return value
@@ -124,6 +125,7 @@ function getAuthPayload(): { initData?: string; ownerKey?: string } {
 export default function Home() {
   const [firstName, setFirstName] = useState("Наталья");
   const [hasAccess, setHasAccess] = useState(false);
+  const [needsConsent, setNeedsConsent] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showImplementation, setShowImplementation] = useState(false);
   const [activePreview, setActivePreview] = useState<Module | null>(null);
@@ -163,7 +165,10 @@ export default function Home() {
     if (!initData && !ownerKey) return;
     fetch("/api/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData, ownerKey }) })
       .then((response) => (response.ok ? response.json() : { active: false }))
-      .then((data) => setHasAccess(Boolean(data.active)))
+      .then((data) => {
+        setHasAccess(Boolean(data.active));
+        setNeedsConsent(data.reason === "consent_required");
+      })
       .catch(() => setHasAccess(false));
   }, []);
 
@@ -392,6 +397,24 @@ export default function Home() {
               <p className="section-kicker">Модуль 0 — ваш навсегда. Дальше — по подписке</p>
               <h2 className="paywall-title">Откройте все модули студии</h2>
               <p className="paywall-sub">Агенты и файлы, которые вы настроите на уроках, остаются у вас навсегда — даже если подписка закончится.</p>
+              {needsConsent ? (
+                <div className="payment-warning">
+                  <span>!</span>
+                  <div>
+                    <small>ОДИН ШАГ ПЕРЕД ОПЛАТОЙ</small>
+                    <h4>Подтвердите согласие в чате бота</h4>
+                    <p>Прежде чем открыть подписку, нужно один раз подтвердить согласие на обработку персональных данных — это делается в чате бота, кнопкой «Я согласен» под сообщением.</p>
+                    <a
+                      className="paywall-cta"
+                      href={BOT_USERNAME ? `https://t.me/${BOT_USERNAME}?start=consent` : undefined}
+                      target="_blank" rel="noreferrer"
+                      style={{ display: "inline-block", marginTop: 12 }}
+                    >
+                      Открыть чат с ботом
+                    </a>
+                  </div>
+                </div>
+              ) : (<>
               <div className="payment-warning">
                 <span>!</span>
                 <div>
@@ -431,6 +454,7 @@ export default function Home() {
               </div>
               <p className="store-fineprint" style={{ marginTop: "-8px" }}>Обе кнопки открывают одну страницу оплаты — нужный период (1 или 3 месяца) выбирается уже там.</p>
               <p className="store-fineprint">Оплата проходит через Tribute. После оплаты доступ откроется автоматически в течение минуты — если модуль всё ещё закрыт, откройте студию заново.</p>
+              </>)}
             </div>
           </section>
         </div>

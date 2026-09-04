@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
   if (!result.active) {
-    return NextResponse.json({ error: "no_access" }, { status: 403 });
+    return NextResponse.json({ error: result.error === "consent_required" ? "consent_required" : "no_access" }, { status: 403 });
   }
 
   return NextResponse.json({ content });
