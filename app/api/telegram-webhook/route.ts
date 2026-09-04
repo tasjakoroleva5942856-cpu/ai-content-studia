@@ -19,12 +19,10 @@ const CONSENT_AGREE = "consent_agree";
 
 function consentText(): string {
   const docsUrl = process.env.NEXT_PUBLIC_LEGAL_DOCS_URL || "";
-  const docsLine = docsUrl ? `\n\n📄 Документы: ${docsUrl}` : "";
+  const docsLine = docsUrl ? ` Ознакомиться с документами можно <a href="${docsUrl}">здесь</a>.` : "";
   return (
     "Привет! Прежде чем открыть AI CONTENT STUDIA, нужно подтвердить согласие " +
-    "на обработку персональных данных (используется только ваш Telegram ID и " +
-    "срок подписки — больше ничего не собираем).\n" +
-    "Оператор: самозанятая Королёва Наталья Григорьевна, ИНН 502810661260." +
+    "на обработку персональных данных." +
     docsLine
   );
 }
