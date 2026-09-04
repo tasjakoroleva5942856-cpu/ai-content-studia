@@ -534,8 +534,8 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
 // "Готово"/"Можно" mark a successful-completion callout (mockup's `.callout.green`,
 // e.g. "**Готово, если** ...", "**Можно двигаться дальше, если:**") — those get
 // routed to the green tone specifically, below.
-const CALLOUT_LEAD_WORDS = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило|Готово|Можно)/i;
-const CALLOUT_GREEN_WORDS = /^\*\*(Готово|Можно)/i;
+const CALLOUT_LEAD_WORDS = /^\*\*(Важно|Главное|Результат|Самый простой|Никогда|Обязательно|Цель|Правило|Готово|Можно|Когда всё готово|Чаще всего)/i;
+const CALLOUT_GREEN_WORDS = /^\*\*(Готово|Можно|Когда всё готово)/i;
 
 function calloutTone(value: string): "amber" | "green" | "" {
   if (value.includes("⚠️")) return "amber";
