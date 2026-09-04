@@ -167,37 +167,6 @@ function InlineRich({ value }: { value: string }) {
   })}</>;
 }
 
-function ReelsMethodCards({ blocks }: { blocks: string[] }) {
-  const navigation = useContext(LessonNavigationContext);
-  const methods: Array<{ name: string; description: string; url: string; badge: string; tone: string }> = [];
-  const badges = ["БЫСТРЫЙ СТАРТ", "ФИРМЕННЫЙ МОНТАЖ", "ТОЧНАЯ НАСТРОЙКА"];
-  const tones = ["captions", "studio", "svg"];
-  let cursor = 1;
-
-  while (cursor + 1 < blocks.length && methods.length < 3) {
-    const lines = blocks[cursor].split("\n").filter(Boolean);
-    const name = lines[0]?.match(/^\*\*([^*]+)\*\*$/)?.[1];
-    const link = blocks[cursor + 1]?.match(/^\[[^\]]+\]\(([^)]+)\)$/);
-    if (!name || !link) break;
-    methods.push({ name, description: lines.slice(1).join(" "), url: link[1], badge: badges[methods.length], tone: tones[methods.length] });
-    cursor += 2;
-  }
-
-  return <div className="reels-method-wrap">
-    <p className="reels-method-intro"><InlineRich value={blocks[0]} /></p>
-    <div className="reels-method-grid">{methods.map((method, index) => {
-      const target = navigation.resolve(method.url);
-      const iconApp = method.name === "Captions" ? appCatalog.find((app) => app.name === "Captions") : method.name.includes("SVG") ? appCatalog.find((app) => app.name === "Claude Code") : undefined;
-      return <div className={`reels-method-card ${method.tone}`} key={method.name}>
-        <div className="reels-method-top">{iconApp ? <AppIcon app={iconApp} /> : <span className="studio-method-icon">AI</span>}<span>0{index + 1}</span></div>
-        <small>{method.badge}</small><h5>{method.name}</h5><p><InlineRich value={method.description} /></p>
-        <button type="button" onClick={() => target && navigation.open(target.id)} disabled={!target}>Открыть урок <span>→</span></button>
-      </div>;
-    })}</div>
-    {blocks[cursor] && <div className="method-note"><span>✓</span><InlineRich value={blocks[cursor]} /></div>}
-  </div>;
-}
-
 // Mockup's `.prompt-card` (screen m1-1 etc): a `ph` header (bold title + small
 // pill badge), a short result/hint line, then a collapsed <details> holding the
 // full text and a copy button. The mockup's own prompt-cards carry per-card
@@ -721,7 +690,7 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
     const isDocument = /Полная методика|Системный промпт|Короткая инструкция/i.test(section.title);
     return <section className={`instruction-section ${isDocument ? "document-section" : ""}`} key={`${prefix}-${section.title}-${sectionIndex}`}>
       <div className="instruction-section-title">{step && <span>{step}</span>}<div><small>{isDocument ? "ГОТОВЫЙ ДОКУМЕНТ" : `РАЗДЕЛ ${String(sectionIndex + 1).padStart(2, "0")}`}</small><h4>{clean(section.title)}</h4></div></div>
-      <div className="instruction-section-body">{/Установите студию одним файлом/i.test(section.title) ? <StudioInstallerSection blocks={section.blocks} title={section.title} /> : /Выберите способ создания Reels/i.test(section.title) ? <ReelsMethodCards blocks={section.blocks} /> : renderBlocks(section.blocks, section.title)}</div>
+      <div className="instruction-section-body">{/Установите студию одним файлом/i.test(section.title) ? <StudioInstallerSection blocks={section.blocks} title={section.title} /> : renderBlocks(section.blocks, section.title)}</div>
     </section>;
   };
 
