@@ -267,7 +267,7 @@ const tableSpecs: TableSpec[] = [
   { headers: ["#", "Элемент", "Что делает", "Приоритет"], firstCell: /^\d+$/, maxRows: 20 },
   { headers: ["Вариант", "Что использовать", "Кому подходит"], firstCell: /^(Тестовый|Основной|Полный)$/i, maxRows: 10 },
   { headers: ["Сервис", "Нужен сразу?", "Ориентир", "Для чего"], firstCell: /^(Claude|ChatGPT|Apify|PostMyPost|HeyGen|ElevenLabs|Google Drive)/i, maxRows: 20 },
-  { headers: ["Формат", "Плюсы", "Минусы", "Что подготовить"], firstCell: /^(Живой разговорный рилс|ИИ-аватар|Кадр без разговора|Видео без тебя)$/i, maxRows: 10 },
+  { headers: ["Формат", "Плюсы", "Минусы", "Что подготовить"], firstCell: /^(Живой разговорный рилс|ИИ-аватар|Кадр без разговора|Видео без тебя)(\s*\(.*\))?$/i, maxRows: 10 },
   { headers: ["Этап", "Срок", "Площадки"], firstCell: /^Этап\s*\d+/i, maxRows: 10 },
   { headers: ["Площадка", "Что публиковать", "Куда вести"], firstCell: /^(YouTube Shorts|Threads|Яндекс Дзен|TikTok|WhatsApp канал)$/i, maxRows: 12 },
   { headers: ["Файл", "Площадка", "Дата и время", "Описание"], firstCell: /.+/, maxRows: 1 },
