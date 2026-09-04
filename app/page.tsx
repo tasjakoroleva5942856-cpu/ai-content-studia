@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import SubscriptionLesson from "./components/SubscriptionLesson";
 import RichLessonArticle from "./components/RichLessonArticle";
 import ModulePreview from "./components/ModulePreview";
 import ImplementationPage from "./components/ImplementationPage";
@@ -26,16 +25,8 @@ type Module = {
 // оплаты через Tribute). Модуль 6 показывается вместе с остальными по подписке.
 const FREE_MODULE_ID = 0;
 
-const subscriptionLessonId = "3c3b3828167181a6a64bf70b02c9dd27";
 const installLessonId = "3c6b382816718159b68ccd9fbfbad560";
 const lessonVideos: Record<string, string> = {};
-
-const lessonOverrides: Record<string, { title?: string; note?: string }> = {
-  [subscriptionLessonId]: {
-    title: "Вход в студию: инструменты и стоимость",
-    note: "Какие сервисы понадобятся, для чего они нужны и сколько стоит начать.",
-  },
-};
 
 function lessonSummary(content: string) {
   // Абзацы вида "**Результат урока:** ..." (см. article-callout в LessonArticle
@@ -66,8 +57,7 @@ function lessonSummary(content: string) {
 
 const toLessons = (items: CourseLessonContent[]): Lesson[] => items.map((item) => ({
   ...item,
-  title: lessonOverrides[item.id]?.title || item.title,
-  note: lessonOverrides[item.id]?.note || lessonSummary(item.content),
+  note: lessonSummary(item.content),
 }));
 
 const modules: Module[] = [
@@ -429,13 +419,11 @@ export default function Home() {
             {activeLesson ? (
               <div className="lesson-view">
                 <div className="lesson-screen-head"><button className="back-link" onClick={() => activeResource ? setActiveResource(null) : setActiveLesson(null)}>{activeResource ? "‹ К уроку" : "‹ Все уроки"}</button><button className="lesson-close" onClick={closeModule} aria-label="Закрыть">×</button></div>
-                {!activeResource && activeLesson.id !== subscriptionLessonId && activeLesson.id !== installLessonId && (lessonVideos[activeLesson.id]
+                {!activeResource && activeLesson.id !== installLessonId && (lessonVideos[activeLesson.id]
                   ? <div className="lesson-video"><iframe src={lessonVideos[activeLesson.id]} title={`Видео: ${activeLesson.title}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
                   : <div className="video-placeholder"><div className="play-button">▶</div><span>Здесь будет видео урока</span><small>Видео появится здесь после добавления ссылки YouTube</small></div>)}
-                {(activeResource || activeLesson.id !== subscriptionLessonId) && <p className="lesson-label">{activeResource ? "МАТЕРИАЛ" : "УРОК"}</p>}<h3>{(activeResource || activeLesson).title}</h3><p className="lesson-note">{(activeResource || activeLesson).note}</p>
-                {!activeResource && activeLesson.id === subscriptionLessonId
-                  ? <SubscriptionLesson />
-                  : (activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} moduleId={activeModule.id} />}
+                <p className="lesson-label">{activeResource ? "МАТЕРИАЛ" : "УРОК"}</p><h3>{(activeResource || activeLesson).title}</h3><p className="lesson-note">{(activeResource || activeLesson).note}</p>
+                {(activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} moduleId={activeModule.id} />}
                 {activeResource ? <footer className="lesson-footer resource-footer">
                   <button className={`complete-button ${moduleToneClass[activeModule.id] || ""}`} onClick={() => setActiveResource(null)}>Вернуться к уроку</button>
                 </footer> : <footer className="lesson-footer">

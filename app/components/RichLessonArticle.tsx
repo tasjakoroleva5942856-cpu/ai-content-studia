@@ -442,6 +442,25 @@ function renderBlocks(blocks: string[], sectionTitle: string) {
       }
     }
 
+    const pathNodeMatches: RegExpMatchArray[] = [];
+    for (let cursor = index; cursor < blocks.length; cursor += 1) {
+      const match = blocks[cursor].match(PATH_NODE);
+      if (!match) break;
+      pathNodeMatches.push(match);
+    }
+    if (pathNodeMatches.length >= 2) {
+      const items = pathNodeMatches.map((match) => ({
+        icon: match[1],
+        tag: clean(match[2]),
+        heading: match[3],
+        body: match[4],
+        finish: /^Финал/.test(match[2]),
+      }));
+      result.push(<PathMap items={items} key={`path-map-${index}`} />);
+      index += pathNodeMatches.length;
+      continue;
+    }
+
     const table = tableSpecs.find((spec) => spec.headers.every((header, offset) => blocks[index + offset] && sameCell(blocks[index + offset], header)));
     if (table) {
       const rows: string[][] = [];
@@ -576,6 +595,28 @@ function Steps({ lines, id }: { lines: string[]; id: string }) {
 }
 
 const ROUTE_HEAD = /^###\s*Маршрут\s*([А-Яа-яA-Za-z])\.\s*(.+)$/;
+
+// Module 0 Lesson 1's "Карта пути" (screen #p0): a vertical dotted timeline of
+// numbered stops, each an icon-dot + a card with an uppercase tag ("Точка 1 ·
+// Стратегия"), a bold one-line heading, and a description paragraph — the
+// mockup's `.path-map`/`.path-node`/`.node-dot`/`.node-card`/`.node-tag`. Ported
+// content authors each stop as its own block: emoji + tag line, then a
+// `**bold heading**` line, then the description — blank-line separated from
+// its neighbors so tokenize() keeps each stop as one block.
+const PATH_NODE = /^(\p{Extended_Pictographic}️?)\s*((?:Точка\s*\d+|Финал)[^\n]*)\n\*\*([^\n]+)\*\*\n([\s\S]+)$/u;
+
+function PathMap({ items }: { items: Array<{ icon: string; tag: string; heading: string; body: string; finish: boolean }> }) {
+  return <div className="path-map">{items.map((item, itemIndex) => (
+    <div className={`path-node${item.finish ? " finish" : ""}`} key={itemIndex}>
+      <div className="node-dot">{item.icon}</div>
+      <div className="node-card">
+        <span className="node-tag">{item.tag}</span>
+        <b>{item.heading}</b>
+        <p><InlineRich value={item.body} /></p>
+      </div>
+    </div>
+  ))}</div>;
+}
 
 // Label → icon dictionary, built from every `.info-rows .row .head` label the
 // design mockup actually uses (lessonredesignmockup.html, `dot-ic` spans inside

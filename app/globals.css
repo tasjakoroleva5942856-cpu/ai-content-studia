@@ -344,6 +344,18 @@ button { font:inherit; }
 .rich-lesson-article .callout.green { background:var(--la-green-soft); color:#155c3c; }
 .rich-lesson-article .callout.green .ic { color:var(--la-green); }
 .rich-lesson-article .path-cta { margin-top:16px; padding:14px 15px; border-radius:14px; background:var(--lesson-accent); color:#fff; font-size:12.5px; line-height:1.5; font-weight:600; }
+.rich-lesson-article .path-map { position:relative; margin:16px 0 14px; padding-left:2px; }
+.rich-lesson-article .path-map::before { content:""; position:absolute; left:19px; top:10px; bottom:10px; width:2px; background:repeating-linear-gradient(to bottom, var(--la-accent-line) 0 6px, transparent 6px 12px); }
+.rich-lesson-article .path-node { position:relative; display:flex; gap:12px; margin-bottom:14px; }
+.rich-lesson-article .path-node:last-child { margin-bottom:0; }
+.rich-lesson-article .node-dot { flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:var(--la-accent); color:#fff; display:grid; place-items:center; font-size:18px; z-index:1; box-shadow:0 0 0 4px var(--la-paper); }
+.rich-lesson-article .node-card { flex:1; background:var(--la-canvas); border-radius:14px; padding:11px 13px 12px; }
+.rich-lesson-article .node-tag { display:block; font-size:10px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; color:var(--la-accent-line); margin-bottom:3px; }
+.rich-lesson-article .node-card b { display:block; font-size:13px; margin-bottom:4px; }
+.rich-lesson-article .node-card p { margin:0; font-size:12px; line-height:1.5; color:var(--la-ink-soft); }
+.rich-lesson-article .path-node.finish .node-dot { background:#e0a530; }
+.rich-lesson-article .path-node.finish .node-card { background:#fdf3e0; }
+.rich-lesson-article .path-node.finish .node-tag { color:#a3711a; }
 .rich-lesson-article ol.steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
 .rich-lesson-article ol.steps li { display:flex; gap:12px; }
 .rich-lesson-article ol.steps .n { flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:1.5px solid var(--la-ink); display:grid; place-items:center; font-size:11.5px; font-weight:800; margin-top:1px; }
