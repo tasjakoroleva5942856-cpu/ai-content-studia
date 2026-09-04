@@ -4,15 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import RichLessonArticle from "./components/RichLessonArticle";
 import ModulePreview from "./components/ModulePreview";
 import ImplementationPage from "./components/ImplementationPage";
-import { module0Content, type CourseLessonContent } from "./content/module-0";
-import { module1Content } from "./content/module-1";
-import { module2Content } from "./content/module-2";
-import { module3Content } from "./content/module-3";
-import { module4Content } from "./content/module-4";
-import { module5Content } from "./content/module-5";
-import { resourceContent } from "./content/resources";
+import { lessonMetaByModule, resourceMeta } from "./content/lessonMeta";
 import { modulePreviews } from "./content/modulePreviews";
 
+// ВАЖНО: полный текст уроков сюда больше не импортируется напрямую (раньше
+// это был реальный баг — весь платный курс уходил в публичный JS-бандл и
+// читался без подписки). lessonMetaByModule/resourceMeta несут только
+// заголовок и короткую сводку; сам текст урока запрашивается с сервера
+// (/api/lesson-content) в момент открытия конкретного урока — см. эффект
+// ниже, который следит за activeLesson/activeResource.
 type Lesson = { id: string; title: string; note?: string; content?: string; sourceUrl?: string };
 type Module = {
   id: number; category: string; eyebrow: string; title: string;
@@ -28,74 +28,42 @@ const FREE_MODULE_ID = 0;
 const installLessonId = "3c6b382816718159b68ccd9fbfbad560";
 const lessonVideos: Record<string, string> = {};
 
-function lessonSummary(content: string) {
-  // Абзацы вида "**Результат урока:** ..." (см. article-callout в LessonArticle
-  // ниже) уже показываются отдельной карточкой в теле урока — если взять их же
-  // сюда, подзаголовок над видео дословно повторит эту карточку. Пропускаем
-  // такие строки и ищем следующую содержательную.
-  const rawParagraphs = content.split("\n").map((item) => item.trim());
-  const candidate = rawParagraphs.find((item) => {
-    if (/^\*\*(Результат|Главное|Важно|Можно|Альтернатива|Самый простой|Никогда)/i.test(item)) return false;
-    const stripped = item.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[#*`]/g, "");
-    return stripped.length > 35;
-  });
-
-  const line = (candidate ?? rawParagraphs.find((item) => item.length > 35) ?? "")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[#*`]/g, "");
-
-  const sentences = line.match(/[^.!?]+[.!?]+/g)?.map((item) => item.trim()) || [];
-  if (sentences.length) {
-    const firstTwo = sentences.slice(0, 2).join(" ");
-    return firstTwo.length <= 210 ? firstTwo : sentences[0];
-  }
-  if (line.length <= 210) return line;
-
-  const shortened = line.slice(0, 210);
-  return `${shortened.slice(0, shortened.lastIndexOf(" ")).trim()}…`;
-}
-
-const toLessons = (items: CourseLessonContent[]): Lesson[] => items.map((item) => ({
-  ...item,
-  note: lessonSummary(item.content),
-}));
-
 const modules: Module[] = [
   {
     id: 0, category: "Старт", eyebrow: "Модуль 0", title: "Вход в студию",
     description: "Настраиваем сервисы, папки и первый рабочий проект без технической путаницы.",
     result: "Инструменты готовы к работе", icon: "↗", tone: "sky", duration: "5 уроков",
-    lessons: toLessons(module0Content),
+    lessons: lessonMetaByModule[0],
   },
   {
     id: 1, category: "Маркетинг", eyebrow: "Модуль 1", title: "Фундамент бизнеса",
     description: "Собираем базу, благодаря которой агенты понимают вас, продукт и аудиторию.",
     result: "Готова база знаний бренда", icon: "◎", tone: "violet", duration: "4 блока",
-    lessons: toLessons(module1Content),
+    lessons: lessonMetaByModule[1],
   },
   {
     id: 2, category: "Контент", eyebrow: "Модуль 2", title: "Контент-команда",
     description: "Создаём агентов с отдельными ролями и превращаем одну тему в несколько форматов.",
     result: "Тема превращается в контент-связку", icon: "✦", tone: "coral", duration: "5 уроков",
-    lessons: toLessons(module2Content),
+    lessons: lessonMetaByModule[2],
   },
   {
     id: 3, category: "Reels", eyebrow: "Модуль 3", title: "Создание Reels",
     description: "Своё видео, ИИ-аватар, Captions или собственная нейромонтажная студия.",
     result: "Первый готовый Reels", icon: "▶", tone: "lime", duration: "11 уроков",
-    lessons: toLessons(module3Content),
+    lessons: lessonMetaByModule[3],
   },
   {
     id: 4, category: "Маркетинг", eyebrow: "Модуль 4", title: "Контент, который продаёт",
     description: "Связываем упаковку, лид-магнит, прогрев и продукт в одну понятную систему.",
     result: "Контент ведёт к продукту", icon: "◇", tone: "peach", duration: "6 уроков",
-    lessons: toLessons(module4Content),
+    lessons: lessonMetaByModule[4],
   },
   {
     id: 5, category: "Масштаб", eyebrow: "Модуль 5", title: "Масштабирование",
     description: "Адаптируем одну сильную тему под новые площадки без увеличения хаоса.",
     result: "Одна тема работает везде", icon: "↟", tone: "blue", duration: "7 уроков",
-    lessons: toLessons(module5Content),
+    lessons: lessonMetaByModule[5],
   },
 ];
 
@@ -130,102 +98,27 @@ function plainText(value: string) {
     .trim();
 }
 
-function InlineText({ value }: { value: string }) {
-  const parts = value.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g).filter(Boolean);
-  return <>{parts.map((part, index) => {
-    if (part.startsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
-    if (part.startsWith("`")) return <code key={index}>{part.slice(1, -1)}</code>;
-    const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (link) return <a key={index} href={link[2]} target="_blank" rel="noreferrer">{link[1]} ↗</a>;
-    return <span key={index}>{part}</span>;
-  })}</>;
-}
-
-const tableSpecs: Record<string, { columns: number; header: boolean }> = {
-  "Вариант": { columns: 3, header: true },
-  "Сервис": { columns: 4, header: true },
-  "Маршрут": { columns: 3, header: true },
-  "Результат": { columns: 2, header: true },
-  "Формат": { columns: 3, header: true },
-  "Этап": { columns: 3, header: true },
-  "Время": { columns: 2, header: false },
-  "Подготовить": { columns: 2, header: false },
-};
-
-function LessonArticle({ content }: { content: string }) {
-  const usefulContent = content
-    .split(/\n---\n## Продолжить обучение/)[0]
-    .replace(/\n(?=#{2,5}\s)/g, "\n\n")
-    .replace(/(#{2,5}\s[^\n]+)\n(?!\n)/g, "$1\n\n");
-  const blocks = usefulContent.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  const nodes = [];
-
-  for (let index = 0; index < blocks.length; index += 1) {
-    const value = blocks[index];
-    const tableSpec = tableSpecs[plainText(value)];
-
-    if (tableSpec) {
-      const cells: string[] = [];
-      let cursor = index;
-      while (cursor < blocks.length) {
-        const candidate = blocks[cursor];
-        if (cursor > index && (/^#{2,5}\s/.test(candidate) || candidate.startsWith("```") || /^[-*]\s/.test(candidate))) break;
-        if (cursor > index && cells.length >= tableSpec.columns * 2 && cells.length % tableSpec.columns === 0 && (candidate.length > 200 || (candidate.startsWith("**") && candidate.length > 90))) break;
-        cells.push(candidate);
-        cursor += 1;
-      }
-      const headers = tableSpec.header ? cells.slice(0, tableSpec.columns) : [];
-      const data = tableSpec.header ? cells.slice(tableSpec.columns) : cells;
-      const rows = Array.from({ length: Math.ceil(data.length / tableSpec.columns) }, (_, rowIndex) => data.slice(rowIndex * tableSpec.columns, (rowIndex + 1) * tableSpec.columns));
-      nodes.push(
-        <div className="lesson-data" key={`table-${index}`}>
-          {rows.map((row, rowIndex) => (
-            <div className="lesson-data-row" key={rowIndex}>
-              {row.map((cell, cellIndex) => (
-                <div className="lesson-data-cell" key={cellIndex}>
-                  {headers[cellIndex] && <small>{plainText(headers[cellIndex])}</small>}
-                  <span><InlineText value={cell} /></span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      );
-      index = cursor - 1;
-      continue;
-    }
-
-    if (value.startsWith("```")) {
-      const code = value.replace(/^```[^\n]*\n?/, "").replace(/```$/, "").trim();
-      nodes.push(<div className="code-card" key={index}><div><span>ГОТОВЫЙ ПРОМПТ</span><button onClick={() => navigator.clipboard?.writeText(code)}>Скопировать</button></div><pre>{code}</pre></div>);
-      continue;
-    }
-    if (value.startsWith("## ")) { nodes.push(<h4 key={index}>{plainText(value)}</h4>); continue; }
-    if (value.startsWith("### ")) { nodes.push(<h5 key={index}>{plainText(value)}</h5>); continue; }
-
-    const lines = value.split("\n");
-    const isList = lines.every((line) => /^[-*]\s/.test(line) || /^\d+[.)]\s/.test(line) || /^- \[[ x]\]/.test(line));
-    if (isList) {
-      const checklist = lines.some((line) => /^- \[[ x]\]/.test(line));
-      nodes.push(<ul className={checklist ? "check-list" : ""} key={index}>{lines.map((line, itemIndex) => <li key={itemIndex}><InlineText value={line.replace(/^[-*]\s|^\d+[.)]\s|^- \[[ x]\]\s?/, "")} /></li>)}</ul>);
-      continue;
-    }
-
-    const callout = /^\*\*(Результат|Главное|Важно|Можно|Альтернатива|Самый простой|Никогда)/i.test(value) || value.includes("⚠️");
-    nodes.push(
-      <p className={callout ? "article-callout" : index === 0 ? "article-lead" : ""} key={index}>
-        {lines.map((line, lineIndex) => <span key={lineIndex}><InlineText value={line} />{lineIndex < lines.length - 1 && <br />}</span>)}
-      </p>
-    );
-  }
-
-  return (
-    <article className="lesson-article">{nodes}</article>
-  );
-}
-
 function BrandMark() {
   return <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>;
+}
+
+// Проход для автора: разовая ссылка вида ?key=СЕКРЕТ один раз сохраняет ключ
+// в этом браузере, дальше подписка не нужна. Сверяется на сервере с
+// OWNER_ACCESS_KEY (см. app/api/access/route.ts, app/lib/resolveAccess.ts).
+const OWNER_KEY_STORAGE = "acs_owner_key";
+
+// Общий способ получить initData/ownerKey — используется и при первой
+// проверке доступа, и при каждом запросе текста урока (см.
+// /api/lesson-content). window.Telegram появляется синхронно, читать его
+// можно в любой момент после монтирования.
+function getAuthPayload(): { initData?: string; ownerKey?: string } {
+  if (typeof window === "undefined") return {};
+  const telegram = (window as typeof window & {
+    Telegram?: { WebApp?: { initData?: string } };
+  }).Telegram?.WebApp;
+  const initData = telegram?.initData;
+  const ownerKey = window.localStorage.getItem(OWNER_KEY_STORAGE) || undefined;
+  return { initData, ownerKey };
 }
 
 export default function Home() {
@@ -237,6 +130,13 @@ export default function Home() {
   const [activeModule, setActiveModule] = useState<Module | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [activeResource, setActiveResource] = useState<Lesson | null>(null);
+  // activeContent — текст последнего успешно загруженного урока;
+  // activeContentKey — id урока, которому он принадлежит. Раз эти два поля
+  // обновляются только внутри колбэков fetch (не синхронно в теле эффекта),
+  // "загрузка" ниже вычисляется, а не хранится отдельным состоянием — так
+  // эффект не делает синхронных setState (см. react-hooks/set-state-in-effect).
+  const [activeContent, setActiveContent] = useState<string | null>(null);
+  const [activeContentKey, setActiveContentKey] = useState<string | null>(null);
   const [tab, setTab] = useState<"home" | "learning">("home");
   const lessonSheetRef = useRef<HTMLElement | null>(null);
 
@@ -249,23 +149,17 @@ export default function Home() {
     const telegramName = telegram?.initDataUnsafe?.user?.first_name;
     if (telegramName) setFirstName(telegramName);
 
-    // Доступ к модулям 1-5 проверяем на сервере по подписи initData — см.
-    // app/api/access и app/lib/access.ts. Без initData (например, открыли
-    // страницу не из Telegram) доступ считается закрытым — кроме прохода
-    // автора через ?key= (см. ниже).
-    const initData = telegram?.initData;
-
-    // Проход для автора: разовая ссылка вида ?key=СЕКРЕТ один раз сохраняет
-    // ключ в этом браузере, дальше подписка не нужна. Сверяется на сервере
-    // с OWNER_ACCESS_KEY (см. app/api/access/route.ts и .env.example).
-    const OWNER_KEY_STORAGE = "acs_owner_key";
     const urlKey = new URLSearchParams(window.location.search).get("key");
     if (urlKey) {
       window.localStorage.setItem(OWNER_KEY_STORAGE, urlKey);
       window.history.replaceState(null, "", window.location.pathname);
     }
-    const ownerKey = urlKey || window.localStorage.getItem(OWNER_KEY_STORAGE) || undefined;
 
+    // Доступ к модулям 1-5 проверяем на сервере по подписи initData — см.
+    // app/api/access и app/lib/resolveAccess.ts. Без initData (например,
+    // открыли страницу не из Telegram) и без ownerKey доступ считается
+    // закрытым.
+    const { initData, ownerKey } = getAuthPayload();
     if (!initData && !ownerKey) return;
     fetch("/api/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData, ownerKey }) })
       .then((response) => (response.ok ? response.json() : { active: false }))
@@ -278,11 +172,39 @@ export default function Home() {
     requestAnimationFrame(() => lessonSheetRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
   }, [activeLesson?.id, activeResource?.id]);
 
+  // Текст урока больше не лежит в клиентском бандле (см. комментарий у
+  // lessonMetaByModule выше) — запрашиваем его здесь, когда пользователь
+  // открывает конкретный урок или материал. Сервер (app/api/lesson-content)
+  // сам решает, отдавать текст или нет, по тому же принципу, что и /api/access.
+  useEffect(() => {
+    const target = activeResource || activeLesson;
+    if (!target) return;
+    let cancelled = false;
+    const { initData, ownerKey } = getAuthPayload();
+    fetch("/api/lesson-content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lessonId: target.id, initData, ownerKey }),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setActiveContent(data?.content ?? null);
+        setActiveContentKey(target.id);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setActiveContent(null);
+        setActiveContentKey(target.id);
+      });
+    return () => { cancelled = true; };
+  }, [activeLesson?.id, activeResource?.id]);
+
   const isLocked = (module: Module) => module.id !== FREE_MODULE_ID && !hasAccess;
 
   const activeLessonIndex = activeModule && activeLesson ? activeModule.lessons.findIndex((item) => item.id === activeLesson.id) : -1;
   const nextLesson = activeModule && activeLessonIndex >= 0 ? activeModule.lessons[activeLessonIndex + 1] : undefined;
-  const resources = useMemo(() => toLessons(resourceContent), []);
+  const resources = resourceMeta;
   const courseLessonLinks = useMemo(() => [
     ...modules.flatMap((module) => module.lessons.map(({ id, title, sourceUrl }) => ({ id, title, sourceUrl }))),
     ...resources.map(({ id, title, sourceUrl }) => ({ id, title, sourceUrl })),
@@ -425,7 +347,8 @@ export default function Home() {
                   ? <div className="lesson-video"><iframe src={lessonVideos[activeLesson.id]} title={`Видео: ${activeLesson.title}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
                   : <div className="video-placeholder"><div className="play-button">▶</div><span>Здесь будет видео урока</span><small>Видео появится здесь после добавления ссылки YouTube</small></div>)}
                 <p className="lesson-label">{activeResource ? "МАТЕРИАЛ" : "УРОК"}</p><h3>{(activeResource || activeLesson).title}</h3><p className="lesson-note">{(activeResource || activeLesson).note}</p>
-                {(activeResource || activeLesson).content && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={(activeResource || activeLesson).content!.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} moduleId={activeModule.id} />}
+                {activeContentKey !== (activeResource || activeLesson).id && <p className="lesson-note">Загружаем урок…</p>}
+                {activeContentKey === (activeResource || activeLesson).id && activeContent && <RichLessonArticle lessonId={(activeResource || activeLesson).id} title={(activeResource || activeLesson).title} content={activeContent.replace(/\n## Дополнительный материал для пользователей из России\s*\n?/g, "\n")} courseLessons={courseLessonLinks} onOpenLesson={openLessonById} moduleId={activeModule.id} />}
                 {activeResource ? <footer className="lesson-footer resource-footer">
                   <button className={`complete-button ${moduleToneClass[activeModule.id] || ""}`} onClick={() => setActiveResource(null)}>Вернуться к уроку</button>
                 </footer> : <footer className="lesson-footer">
@@ -480,7 +403,7 @@ export default function Home() {
               <div className="paywall-options">
                 <div className="paywall-option">
                   <div className="top-row"><span className="label">1 месяц</span><span className="price">3 900 ₽<span> /мес</span></span></div>
-                  <p className="note">Доступ на 30 дней с момента оплаты. Захотите продолжить — оформите ещё раз.</p>
+                  <p className="note">Автоматически продлевается каждый месяц, пока вы не отмените подписку в настройках Tribute.</p>
                   <a
                     className="paywall-cta"
                     href={TRIBUTE_LINK || undefined}
