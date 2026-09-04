@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveAccess } from "../../lib/resolveAccess";
 import { getLessonContentById, isFreeLessonId } from "../../content/server/lessonContent";
+import { checkRateLimit, getClientIp, lessonContentLimiter } from "../../lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,10 @@ export const runtime = "nodejs";
 // курс попадал в публичный JS-бандл и читался без подписки) — вместо этого
 // запрашивает контент здесь, когда пользователь открывает конкретный урок.
 export async function POST(request: NextRequest) {
+  if (!(await checkRateLimit(lessonContentLimiter, getClientIp(request)))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null) as { lessonId?: string; initData?: string; ownerKey?: string } | null;
   const lessonId = body?.lessonId;
   if (!lessonId) {

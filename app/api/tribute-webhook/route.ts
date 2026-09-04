@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { grantAccessUntil } from "../../lib/access";
+import { checkRateLimit, getClientIp, tributeWebhookLimiter } from "../../lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,10 @@ type TributeWebhookEvent = {
 };
 
 export async function POST(request: NextRequest) {
+  if (!(await checkRateLimit(tributeWebhookLimiter, getClientIp(request)))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const apiKey = process.env.TRIBUTE_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "server_not_configured" }, { status: 500 });
