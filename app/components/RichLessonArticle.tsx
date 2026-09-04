@@ -45,20 +45,19 @@ function clean(value: string) {
   return value.replace(/\*\*/g, "").replace(/`([^`]+)`/g, "$1").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/^#{1,5}\s+/, "").trim();
 }
 
-function contentWithoutNavigation(content: string) {
-  return content.split(/\n---\n## (?:Продолжить обучение|Куда дальше)/)[0].trim();
-}
-
 // Mockup's `.path-cta` (e.g. screens p0/m1-1/m2-0 etc): a solid module-tinted
 // callout with the lesson's transition note, sitting right before the
 // "next lesson" button — authored in module-N.ts as the LAST block of a
-// lesson, wrapped in a lone `---` line on each side (the same convention the
-// content already uses to separate this from `\n---\n## Продолжить обучение`
-// right after it). Split it off before tokenizing the rest of the body.
+// lesson, wrapped in a lone `---` line on each side, immediately followed by
+// the `\n---\n## Продолжить обучение` navigation section. Must run on the RAW
+// content (before the navigation section is stripped) — a previous version
+// stripped navigation first, which also consumed the path-cta's own closing
+// `---`, so the path-cta never matched for ANY lesson and rendered as stray
+// plain text (visible literal "---" line) instead of the styled callout.
 function splitPathCta(content: string): { body: string; pathCta: string | null } {
-  const match = content.match(/\n---\n([^]+?)\n---\s*$/);
-  if (!match) return { body: content, pathCta: null };
-  return { body: content.slice(0, match.index).trim(), pathCta: match[1].trim() };
+  const wrapped = content.match(/\n---\n([^]+?)\n---\n## (?:Продолжить обучение|Куда дальше)/);
+  if (wrapped) return { body: content.slice(0, wrapped.index).trim(), pathCta: wrapped[1].trim() };
+  return { body: content.split(/\n---\n## (?:Продолжить обучение|Куда дальше)/)[0].trim(), pathCta: null };
 }
 
 function notionPageId(url: string) {
@@ -625,8 +624,7 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
 }
 
 export default function RichLessonArticle({ lessonId, title, content, courseLessons, onOpenLesson, showTools = true, moduleId }: Props) {
-  const prepared = useMemo(() => contentWithoutNavigation(content), [content]);
-  const { body: bodyContent, pathCta } = useMemo(() => splitPathCta(prepared), [prepared]);
+  const { body: bodyContent, pathCta } = useMemo(() => splitPathCta(content), [content]);
   const navigation = useMemo<NavigationContextValue>(() => {
     const lessonMap = new Map(courseLessons.map((lesson) => [notionPageId(lesson.sourceUrl || ""), lesson]));
     return { resolve: (url: string) => lessonMap.get(notionPageId(url)), open: (id: string) => { onOpenLesson(id); } };
@@ -635,7 +633,7 @@ export default function RichLessonArticle({ lessonId, title, content, courseLess
   const firstHeading = tokens.findIndex((token) => token.startsWith("## "));
   const intro = firstHeading === -1 ? tokens : tokens.slice(0, firstHeading);
   const rest = firstHeading === -1 ? [] : tokens.slice(firstHeading);
-  const tools = useMemo(() => appCatalog.filter((app) => app.pattern.test(prepared)).filter((app, index, all) => !(app.name === "Claude" && all.some((item) => item.name === "Claude Code"))), [prepared]);
+  const tools = useMemo(() => appCatalog.filter((app) => app.pattern.test(bodyContent)).filter((app, index, all) => !(app.name === "Claude" && all.some((item) => item.name === "Claude Code"))), [bodyContent]);
 
   const sections: Array<{ title: string; blocks: string[] }> = [];
   for (const token of rest) {
