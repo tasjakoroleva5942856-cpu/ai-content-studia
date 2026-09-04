@@ -241,6 +241,8 @@ const tableSpecs: TableSpec[] = [
   { headers: ["Площадка", "Что публиковать", "Куда вести"], firstCell: /^(YouTube Shorts|Threads|Яндекс Дзен|TikTok|WhatsApp канал)$/i, maxRows: 12 },
   { headers: ["Файл", "Площадка", "Дата и время", "Описание"], firstCell: /.+/, maxRows: 1 },
   { headers: ["Ракурс", "Формулировка для промпта"], firstCell: /^(Лицо вблизи|По талию|В полный рост|Профиль|Со спины)$/i, maxRows: 5 },
+  { headers: ["Что ставить", "Когда"], firstCell: /^(Ссылка на Telegram-канал|Ссылка на чат-бот с лид-магнитом|Linktree \/ мультиссылка|Ссылка на конкретный продукт)$/i, maxRows: 4 },
+  { headers: ["Рубрика", "Что внутри", "Зачем"], firstCell: /^\p{Extended_Pictographic}️?\s*«/u, maxRows: 10 },
 ];
 
 function sameCell(value: string, expected: string) {
@@ -274,6 +276,7 @@ function RichTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   if (headers[0] === "Ракурс") return <PromptAngles rows={rows} />;
   if (headers[0] === "Вариант") return <StartVariantRows rows={rows} />;
   if (headers[0] === "Сервис") return <ServicePriceRows rows={rows} />;
+  if (headers[0] === "Рубрика") return <RubricRows rows={rows} />;
   return <div className="info-rows">{rows.map((row, rowIndex) => (
     <div className="row" key={rowIndex}>
       <div className="head"><span className="name"><span className="dot-ic">{rowIndex + 1}</span><b><InlineRich value={row[0]} /></b></span></div>
@@ -294,6 +297,21 @@ function StartVariantRows({ rows }: { rows: string[][] }) {
     const name = clean(row[0]);
     return <div className="row" key={name}>
       <div className="head"><span className="name"><span className="dot-ic">{START_VARIANT_ICONS[name] || "•"}</span><b>{name}</b></span></div>
+      <div className="sub"><InlineRich value={row[1]} /> — <InlineRich value={row[2]} /></div>
+    </div>;
+  })}</div>;
+}
+
+// Rows like "🙋 «Кто я»" / "💎 «Результаты/Кейсы»" (Instagram/Telegram "Актуальные"
+// rubric tables) carry their own leading emoji as the icon — reuse it instead of a
+// sequential dot-ic number, same idea as ScenarioGrid's LEADING_EMOJI convention.
+function RubricRows({ rows }: { rows: string[][] }) {
+  return <div className="info-rows">{rows.map((row) => {
+    const match = row[0].match(LEADING_EMOJI);
+    const icon = match ? match[1] : "•";
+    const label = match ? row[0].replace(LEADING_EMOJI, "") : row[0];
+    return <div className="row" key={row[0]}>
+      <div className="head"><span className="name"><span className="dot-ic">{icon}</span><b><InlineRich value={label} /></b></span></div>
       <div className="sub"><InlineRich value={row[1]} /> — <InlineRich value={row[2]} /></div>
     </div>;
   })}</div>;
