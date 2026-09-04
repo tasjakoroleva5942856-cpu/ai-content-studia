@@ -243,6 +243,7 @@ const tableSpecs: TableSpec[] = [
   { headers: ["Ракурс", "Формулировка для промпта"], firstCell: /^(Лицо вблизи|По талию|В полный рост|Профиль|Со спины)$/i, maxRows: 5 },
   { headers: ["Что ставить", "Когда"], firstCell: /^(Ссылка на Telegram-канал|Ссылка на чат-бот с лид-магнитом|Linktree \/ мультиссылка|Ссылка на конкретный продукт)$/i, maxRows: 4 },
   { headers: ["Рубрика", "Что внутри", "Зачем"], firstCell: /^\p{Extended_Pictographic}️?\s*«/u, maxRows: 10 },
+  { headers: ["Проект", "Файлы"], firstCell: /^(Маркетолог|Копирайтер Telegram|Копирайтер Instagram|Сценарист Reels|YouTube \/ Threads)/i, maxRows: 6 },
 ];
 
 function sameCell(value: string, expected: string) {
@@ -277,6 +278,7 @@ function RichTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   if (headers[0] === "Вариант") return <StartVariantRows rows={rows} />;
   if (headers[0] === "Сервис") return <ServicePriceRows rows={rows} />;
   if (headers[0] === "Рубрика") return <RubricRows rows={rows} />;
+  if (headers[0] === "Проект") return <ProjectFilesRows rows={rows} />;
   return <div className="info-rows">{rows.map((row, rowIndex) => (
     <div className="row" key={rowIndex}>
       <div className="head"><span className="name"><span className="dot-ic">{rowIndex + 1}</span><b><InlineRich value={row[0]} /></b></span></div>
@@ -298,6 +300,26 @@ function StartVariantRows({ rows }: { rows: string[][] }) {
     return <div className="row" key={name}>
       <div className="head"><span className="name"><span className="dot-ic">{START_VARIANT_ICONS[name] || "•"}</span><b>{name}</b></span></div>
       <div className="sub"><InlineRich value={row[1]} /> — <InlineRich value={row[2]} /></div>
+    </div>;
+  })}</div>;
+}
+
+// "Финальная проверка Project Knowledge" table (Агент стратег для воронок): one
+// row per already-open project, listing which files should be loaded into it.
+const PROJECT_FILE_ICONS: Record<string, string> = {
+  "Маркетолог": "📊",
+  "Копирайтер Telegram": "✈️",
+  "Копирайтер Instagram": "📸",
+  "Сценарист Reels": "🎬",
+  "YouTube / Threads (если есть)": "📺",
+};
+
+function ProjectFilesRows({ rows }: { rows: string[][] }) {
+  return <div className="info-rows">{rows.map((row) => {
+    const name = clean(row[0]);
+    return <div className="row" key={name}>
+      <div className="head"><span className="name"><span className="dot-ic">{PROJECT_FILE_ICONS[name] || "📁"}</span><b>{name}</b></span></div>
+      <div className="sub"><InlineRich value={row[1]} /></div>
     </div>;
   })}</div>;
 }
