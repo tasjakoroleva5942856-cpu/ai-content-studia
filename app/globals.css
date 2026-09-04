@@ -528,9 +528,11 @@ button { font:inherit; }
 .module-preview .section-head h2 { margin:0; font-size:16.5px; font-weight:800; letter-spacing:-.01em; }
 .module-preview .plain-info { font-size:13.5px; line-height:1.65; color:#332e3c; margin:0 0 14px; }
 /* verbatim mockup .scenario-grid (lessonredesignmockup.html lines 301-303) */
-.module-preview .scenario-grid { display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+.module-preview .scenario-grid, .rich-lesson-article .scenario-grid { display:flex; flex-direction:column; gap:8px; margin:14px 0; }
 .module-preview .scenario-grid .item { display:flex; gap:10px; padding:11px 12px; background:var(--la-canvas, #f7f5fa); border-radius:11px; font-size:12.5px; line-height:1.45; }
 .module-preview .scenario-grid .item .ic { flex:0 0 auto; width:24px; height:24px; border-radius:8px; background:var(--preview-accent-soft); color:var(--preview-accent); display:grid; place-items:center; font-size:12px; }
+.rich-lesson-article .scenario-grid .item { display:flex; gap:10px; padding:11px 12px; background:var(--la-canvas); border-radius:11px; font-size:12.5px; line-height:1.45; color:var(--la-ink); }
+.rich-lesson-article .scenario-grid .item .ic { flex:0 0 auto; width:24px; height:24px; border-radius:8px; background:var(--lesson-accent-soft); color:var(--lesson-accent); display:grid; place-items:center; font-size:12px; }
 /* verbatim mockup .info-rows (lessonredesignmockup.html lines 305-310, 345-348):
    flat list with bottom-border rows, no card chrome. */
 .module-preview .info-rows, .rich-lesson-article .info-rows { display:flex; flex-direction:column; margin:14px 0; }

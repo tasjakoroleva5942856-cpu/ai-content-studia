@@ -337,6 +337,21 @@ function StartVariantRows({ rows }: { rows: string[][] }) {
 // not sequential list position. Reuses the `.info-rows`/`.dot-ic` markup/CSS.
 const FOLDER_ITEM = /^(\d{2})_(\S+)\s*—\s*(.+)$/;
 
+// Verbatim mockup `.scenario-grid` (lessonredesignmockup.html lines 301-303) — this is
+// how EVERY plain bullet list in the mockup renders (grep confirms zero bare <ul>
+// elements exist anywhere in the file). Each item gets an `.ic` badge: the item's own
+// leading emoji if every item in the list has one, otherwise a sequential "01"/"02".
+const LEADING_EMOJI = /^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u;
+
+function ScenarioGrid({ lines }: { lines: string[] }) {
+  const allHaveEmoji = lines.every((line) => LEADING_EMOJI.test(line));
+  return <div className="scenario-grid">{lines.map((line, index) => {
+    const icon = allHaveEmoji ? line.match(LEADING_EMOJI)![1] : String(index + 1).padStart(2, "0");
+    const text = allHaveEmoji ? line.replace(LEADING_EMOJI, "") : line;
+    return <div className="item" key={index}><span className="ic">{icon}</span><InlineRich value={text} /></div>;
+  })}</div>;
+}
+
 function FolderNumberRows({ items }: { items: Array<{ number: string; label: string; description: string }> }) {
   return <div className="info-rows">{items.map((item) => (
     <div className="row" key={item.number}>
@@ -602,7 +617,7 @@ function renderBlock(value: string, index: number, sectionTitle: string): ReactN
   }
 
   const bullets = lines.every((line) => /^[-*]\s/.test(line));
-  if (bullets) return <ul className="rich-bullet-list" key={index}>{lines.map((line) => <li key={line}><InlineRich value={line.replace(/^[-*]\s/, "")} /></li>)}</ul>;
+  if (bullets) return <ScenarioGrid lines={lines.map((line) => line.replace(/^[-*]\s/, ""))} key={index} />;
 
   const callout = isCallout(value);
   if (callout) return <Callout tone={calloutTone(value)} lines={lines} id={`callout-${index}`} key={index} />;
